@@ -24,13 +24,13 @@ class User(SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    email: str = Field(unique=True, nullable=False)
-    username: str = Field(unique=True, nullable=False)
+    email: str = Field(max_length=255, unique=True, nullable=False)
+    username: str = Field(max_length=255, unique=True, nullable=False)
     avatar: Optional[str] = None
     bio: Optional[str] = None
-    password: str = Field(nullable=False)
-    name: str = Field(nullable=False)
-    dept: str = Field(nullable=False)
+    password: str = Field(max_length=255, nullable=False)
+    name: str = Field(max_length=255, nullable=False)
+    dept: str = Field(max_length=255, nullable=False)
     currency: str = Field(nullable=False)
 
     @property

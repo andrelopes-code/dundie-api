@@ -1,4 +1,5 @@
 from typing import Optional
+
 from sqlmodel import Field, SQLModel
 
 
@@ -21,6 +22,7 @@ class User(SQLModel, table=True):
     - superuser (property): Retorna True se for superusuário,
     False caso contrário.
     """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, nullable=False)
     username: str = Field(unique=True, nullable=False)

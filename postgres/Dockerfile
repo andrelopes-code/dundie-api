@@ -1,3 +1,3 @@
 FROM postgres:alpine3.14
 
-COPY createDb.sh /docker-entrypoint-initdb.d/
+COPY create_databases.sh /docker-entrypoint-initdb.d/

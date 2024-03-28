@@ -105,3 +105,13 @@ disallow_incomplete_defs = true
 disallow_untyped_decorators = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
+
+[tool.pyright]
+ignore = [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv",
+    "**/.eggs",
+    "**/*.egg",
+    "**/migrations",
+]

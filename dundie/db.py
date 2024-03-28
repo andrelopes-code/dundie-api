@@ -1,5 +1,7 @@
 """Database connection"""
+
 from sqlmodel import create_engine
+
 from dundie.config import settings
 
 engine = create_engine(

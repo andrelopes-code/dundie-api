@@ -1,8 +1,8 @@
-"""Change to max-lenght
+"""password
 
-Revision ID: e919ac17f2e2
-Revises: 3541b89ecd5d
-Create Date: 2024-03-27 23:14:23.749968
+Revision ID: 3372da74b65e
+Revises: e919ac17f2e2
+Create Date: 2024-03-28 12:37:32.361603
 
 """
 
@@ -13,8 +13,8 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'e919ac17f2e2'
-down_revision: Union[str, None] = '3541b89ecd5d'
+revision: str = '3372da74b65e'
+down_revision: Union[str, None] = 'e919ac17f2e2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

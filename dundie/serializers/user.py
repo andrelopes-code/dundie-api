@@ -16,12 +16,12 @@ class UserResponse(BaseModel):
         currency (str): User's preferred currency
     """
 
-    username: str
-    avatar: str | None = None
-    bio: str | None = None
     name: str
+    username: str
     dept: str
     currency: str
+    bio: str | None = None
+    avatar: str | None = None
 
 
 class UserRequest(BaseModel):

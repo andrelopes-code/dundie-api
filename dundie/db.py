@@ -1,11 +1,20 @@
 """Database connection"""
 
-from sqlmodel import create_engine
+from sqlmodel import create_engine, Session
 
 from dundie.config import settings
+from fastapi import Depends
 
 engine = create_engine(
     settings.db.uri,
     echo=settings.db.echo,
     connect_args=settings.db.connect_args,
 )
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+ActiveSession = Depends(get_session)

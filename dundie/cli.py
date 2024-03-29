@@ -3,10 +3,10 @@ from rich.console import Console
 from rich.table import Table
 from sqlmodel import Session, select
 
-from .config import settings
-from .db import engine
-from .models import User
-from .models.user import get_username
+from dundie.config import settings
+from dundie.db import engine
+from dundie.models import User
+from dundie.models.user import get_username
 
 main = typer.Typer(name="dundie CLI", add_completion=False)
 

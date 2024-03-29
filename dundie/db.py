@@ -1,9 +1,9 @@
 """Database connection"""
 
-from sqlmodel import create_engine, Session
+from fastapi import Depends
+from sqlmodel import Session, create_engine
 
 from dundie.config import settings
-from fastapi import Depends
 
 engine = create_engine(
     settings.db.uri,

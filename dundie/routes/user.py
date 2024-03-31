@@ -1,4 +1,3 @@
-import sqlmodel
 from typing import List
 
 from fastapi import APIRouter
@@ -10,10 +9,12 @@ from dundie.models.user import User
 from dundie.serializers import UserRequest, UserResponse
 from dundie.routes.status import get_status
 
+from sqlalchemy.exc import IntegrityError
+
 router = APIRouter()
 
 
-@router.get('/', response_model=List[UserResponse], summary='List all users.')
+@router.get('/', response_model=List[UserResponse], summary='List all users')
 async def list_users(*, session: Session = ActiveSession):
     """
     List all users.
@@ -24,7 +25,13 @@ async def list_users(*, session: Session = ActiveSession):
     Returns:
     - List[UserResponse]: A list of user responses containing user data.
     """
-    users = session.exec(select(User)).all()
+    # TODO: Order
+    stmt = select(User)
+    users = session.exec(stmt).all()
+
+    if not users:
+        raise HTTPException(204, 'The user list is empty')
+
     return users
 
 
@@ -32,7 +39,9 @@ async def list_users(*, session: Session = ActiveSession):
     '/{username}',
     response_model=UserResponse,
     summary='Get a user by username.',
-    responses={404: get_status('User not found.')},
+    responses={
+        404: get_status('Not found')
+        },
 )
 async def get_user_by_username(
     *, session: Session = ActiveSession, username: str
@@ -51,11 +60,11 @@ async def get_user_by_username(
     - HTTPException: If the user with the specified username is not found
     (status code 404).
     """
-    query = select(User).where(User.username == username)
-    user = session.exec(query).first()
+    stmt = select(User).where(User.username == username)
+    user = session.exec(stmt).first()
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
+        raise HTTPException(404, "User not found")
 
     return user
 
@@ -65,7 +74,9 @@ async def get_user_by_username(
     response_model=UserResponse,
     status_code=201,
     summary='Creates a new user.',
-    responses={409: get_status('Conflict.')},
+    responses={
+        409: get_status('Conflict')
+        },
 )
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """
@@ -76,19 +87,21 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     - user (UserRequest): The data representing the new user to be created.
 
     Returns:
-        User: The newly created user object.
+    - User: The newly created user object.
 
     Raises:
-        HTTPException: If there is a constraint violation error during the
-        database transaction.
+    - HTTPException: If there is a constraint violation error during the
+    database transaction.
     """
     db_user = User.from_orm(user)
     session.add(db_user)
 
     try:
         session.commit()
-    except sqlmodel.exceptions.ConstraintViolationError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(409, "An error occurred when registering the user")
 
     session.refresh(db_user)
 

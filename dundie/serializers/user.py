@@ -4,17 +4,7 @@ from dundie.models.user import get_username
 
 
 class UserResponse(BaseModel):
-    """
-    User response serializer containing basic information about a user.
-
-    Attributes:
-        username (str): Username
-        avatar (str | None): User's avatar URL
-        bio (str | None): User's bio
-        name (str): User's full name
-        dept (str): User's department
-        currency (str): User's preferred currency
-    """
+    """User response serializer containing basic information about a user."""
 
     name: str
     username: str
@@ -25,19 +15,7 @@ class UserResponse(BaseModel):
 
 
 class UserRequest(BaseModel):
-    """
-    User request serializer for creating or updating a user.
-
-    Attributes:
-        email (str): User's email
-        password (str): User's password
-        name (str): User's full name
-        dept (str): User's department
-        username (str | None): Username
-        avatar (str | None): User's avatar URL
-        bio (str | None): User's bio
-        currency (str): User's preferred currency
-    """
+    """User request serializer for creating or updating a user."""
 
     email: str
     password: str

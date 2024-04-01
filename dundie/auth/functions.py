@@ -116,17 +116,16 @@ def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user)
 ) -> User:
-    """Dependency to get the active user for sync calls
-
-    This dependency wraps the sync function `get_current_user` and returns
-    the active user for sync calls.
-
-    Returns:
-        User: The active user
-    """
+    """Dependency to get the active user"""
     return current_user
+
+
+async def user_is_superuser(
+    current_user: User = Depends(get_current_user)
+) -> bool:
+    return current_user.superuser
 
 
 async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
@@ -148,3 +147,4 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
 
 
 AuthenticatedUser = Depends(get_current_active_user)
+SuperUser = Depends(user_is_superuser)

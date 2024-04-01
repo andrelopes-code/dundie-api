@@ -9,11 +9,17 @@ from dundie.db import ActiveSession
 from dundie.models.user import User
 from dundie.routes.status import get_status
 from dundie.serializers import UserRequest, UserResponse
+from dundie.auth.functions import AuthenticatedUser, SuperUser
 
 router = APIRouter()
 
 
-@router.get('/', response_model=List[UserResponse], summary='List all users')
+@router.get(
+    '/',
+    response_model=List[UserResponse],
+    summary='List all users',
+    dependencies=[AuthenticatedUser],
+)
 async def list_users(*, session: Session = ActiveSession):
     """
     List all users.
@@ -39,6 +45,7 @@ async def list_users(*, session: Session = ActiveSession):
     response_model=UserResponse,
     summary='Get a user by username.',
     responses={404: get_status('Not found')},
+    dependencies=[AuthenticatedUser],
 )
 async def get_user_by_username(
     *, session: Session = ActiveSession, username: str
@@ -72,6 +79,7 @@ async def get_user_by_username(
     status_code=201,
     summary='Creates a new user.',
     responses={409: get_status('Conflict')},
+    dependencies=[SuperUser],
 )
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """

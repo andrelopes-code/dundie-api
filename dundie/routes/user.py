@@ -2,14 +2,13 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from dundie.db import ActiveSession
 from dundie.models.user import User
-from dundie.serializers import UserRequest, UserResponse
 from dundie.routes.status import get_status
-
-from sqlalchemy.exc import IntegrityError
+from dundie.serializers import UserRequest, UserResponse
 
 router = APIRouter()
 
@@ -39,9 +38,7 @@ async def list_users(*, session: Session = ActiveSession):
     '/{username}',
     response_model=UserResponse,
     summary='Get a user by username.',
-    responses={
-        404: get_status('Not found')
-        },
+    responses={404: get_status('Not found')},
 )
 async def get_user_by_username(
     *, session: Session = ActiveSession, username: str
@@ -74,9 +71,7 @@ async def get_user_by_username(
     response_model=UserResponse,
     status_code=201,
     summary='Creates a new user.',
-    responses={
-        409: get_status('Conflict')
-        },
+    responses={409: get_status('Conflict')},
 )
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """

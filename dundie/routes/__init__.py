@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from dundie.routes.user import router as user_router
 
 main_router = APIRouter()

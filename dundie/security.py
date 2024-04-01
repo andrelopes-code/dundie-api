@@ -8,12 +8,12 @@ def verify_password(plain_pass: str, hashed_pass: str) -> bool:
     Verify if a plain password matches a hashed password.
 
     Args:
-        plain_pass (str): The plain password to be verified.
-        hashed_pass (str): The hashed password to be compared against.
+    - plain_pass (str): The plain password to be verified.
+    - hashed_pass (str): The hashed password to be compared against.
 
     Returns:
-        bool: True if the plain password matches the hashed password,
-        False otherwise.
+    - bool: True if the plain password matches the hashed password,
+    - False otherwise.
     """
     return pass_context.verify(plain_pass, hashed_pass)
 
@@ -23,10 +23,10 @@ def get_password_hash(plain_pass: str) -> str:
     Generate a password hash from a plain password.
 
     Args:
-        plain_pass (str): The plain password to be hashed.
+    - plain_pass (str): The plain password to be hashed.
 
     Returns:
-        str: The hashed password.
+    - str: The hashed password.
     """
     return pass_context.hash(plain_pass)
 
@@ -38,19 +38,9 @@ class HashedPassword(str):
     This class inherits from the built-in `str` class and provides a mechanism
     to validate and hash passwords.
 
-    Methods:
-        __get_validators__:
-            Generates a validator function that will be used to validate the
-            input.
-
-        validate:
-            Validates the input and returns a new instance with the hashed
-            password.
-
     Usage:
         hashed_pw = HashedPassword.validate("password123")
         print(hashed_pw)  # Output: HashedPassword('hashed_password')
-
     """
 
     @classmethod

@@ -5,20 +5,26 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from dundie.auth.functions import AuthenticatedUser
+from dundie.auth.functions import AuthenticatedUser, CanChangeUserPassword
 from dundie.db import ActiveSession
 from dundie.models.user import User
-from dundie.serializers import UserPatchRequest, UserRequest, UserResponse
-from dundie.utils.functions import apply_user_patch
+from dundie.security import verify_password
+from dundie.serializers import (
+    UserPasswordPatchRequest,
+    UserPatchRequest,
+    UserRequest,
+    UserResponse,
+)
+from dundie.utils.utils import apply_user_patch
 
 router = APIRouter()
 
 
 @router.get(
     '/',
-    response_model=List[UserResponse],
     summary='List all users',
     dependencies=[AuthenticatedUser],
+    response_model=List[UserResponse],
 )
 async def list_users(*, session: Session = ActiveSession):
     """
@@ -45,9 +51,9 @@ async def list_users(*, session: Session = ActiveSession):
 
 @router.get(
     '/{username}',
-    response_model=UserResponse,
     summary='Get a user by username',
     dependencies=[AuthenticatedUser],
+    response_model=UserResponse,
 )
 async def get_user_by_username(
     *, session: Session = ActiveSession, username: str
@@ -80,10 +86,10 @@ async def get_user_by_username(
 
 @router.post(
     '/',
-    response_model=UserResponse,
-    status_code=201,
     summary='Creates a new user',
+    status_code=201,
     dependencies=[],
+    response_model=UserResponse,
 )
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """
@@ -156,7 +162,57 @@ async def update_bio_and_avatar(
         session.add(user)
         session.commit()
         session.refresh(user)
-    except Exception as e:
+    except IntegrityError as e:
+        session.rollback()
         print(e)
+        raise HTTPException(500, 'Database IntegrityError')
+
+    return user
+
+
+@router.post(
+    '/{username}/password',
+    summary='Changes the specified user password',
+    dependencies=[AuthenticatedUser],
+    response_model=UserResponse
+)
+async def change_user_password(
+    username: str,
+    patch_data: UserPasswordPatchRequest,
+    session: Session = ActiveSession,
+    user: User = CanChangeUserPassword
+):
+    """
+    Changes the specified user password.
+
+    Args:
+        - username (str): The username of the user whose password is being
+        changed.
+        - patch_data (UserPasswordPatchRequest): The data containing the new
+        hashed password.
+        - session (Session, optional): The active database session.
+        Defaults to ActiveSession.
+        - user (User, optional): The user object representing the userwhose
+        password is being changed. Defaults to CanChangeUserPassword.
+
+    Returns:
+        - User
+    """
+    # Checks if the new password is the same as the current password
+    if verify_password(patch_data.password, user.password):
+        raise HTTPException(400, 'New password matches the current one')
+
+    # Change the password
+    user.password = patch_data.hashed_password
+    session.add(user)
+
+    try:
+        session.commit()
+        session.refresh(user)
+
+    except IntegrityError as e:
+        session.rollback()
+        print(e)
+        raise HTTPException(500, 'Database IntegrityError')
 
     return user

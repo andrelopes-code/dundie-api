@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Callable
 
-from fastapi import Depends, Request, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlmodel import Session, select
@@ -113,10 +113,7 @@ def get_current_user(
 
 
 async def get_user_if_change_password_is_allowed(
-    *,
-    request: Request,
-    username: str,
-    pwd_reset_token: str | None = None
+    *, request: Request, username: str, pwd_reset_token: str | None = None
 ) -> User:
     """
     Returns User if one of the conditions is met.
@@ -145,14 +142,13 @@ async def get_user_if_change_password_is_allowed(
         [
             valid_pwd_reset_token,
             authenticated_user and authenticated_user.superuser,
-            authenticated_user and authenticated_user.id == target_user.id
+            authenticated_user and authenticated_user.id == target_user.id,
         ]
     ):
         return target_user
 
     raise HTTPException(
-        403,
-        "You are not allowed to change this user's password"
+        403, "You are not allowed to change this user's password"
     )
 
 
@@ -190,6 +186,6 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
     return user
 
 
-AuthenticatedUser = Depends(get_current_active_user)
-SuperUser = Depends(user_is_superuser)
-CanChangeUserPassword = Depends(get_user_if_change_password_is_allowed)
+AuthenticatedUser: User = Depends(get_current_active_user)
+SuperUser: User = Depends(user_is_superuser)
+CanChangeUserPassword: User = Depends(get_user_if_change_password_is_allowed)

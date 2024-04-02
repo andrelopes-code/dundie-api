@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
 
-from dundie.security import get_password_hash
 from dundie.models.user import get_username
+from dundie.security import get_password_hash
 
 
 class UserResponse(BaseModel):
@@ -73,6 +73,6 @@ class UserPasswordPatchRequest(BaseModel):
         return values
 
     @property
-    def hashed_password(self):
+    def hashed_password(self) -> str:
         """Returns hashed password"""
-        get_password_hash(self.password)
+        return get_password_hash(self.password)

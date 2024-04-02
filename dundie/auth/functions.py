@@ -116,14 +116,14 @@ def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> User:
     """Dependency to get the active user"""
     return current_user
 
 
 async def user_is_superuser(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> bool:
     return current_user.superuser
 

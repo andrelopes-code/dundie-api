@@ -1,6 +1,7 @@
 from pydantic import BaseModel, root_validator
 
 from dundie.models.user import get_username
+from fastapi import HTTPException
 
 
 class UserResponse(BaseModel):
@@ -43,4 +44,23 @@ class UserRequest(BaseModel):
         if values.get('username') is None:
             values['username'] = get_username(values['name'])
 
+        return values
+
+
+class UserPatchRequest(BaseModel):
+    """User request serializer for creating or updating a user."""
+
+    email: str | None = None
+    password: str | None = None
+    name: str | None = None
+    dept: str | None = None
+    username: str | None = None
+    avatar: str | None = None
+    bio: str | None = None
+    currency: str | None = None
+
+    @root_validator(pre=True)
+    def ensure_values(cls, values):
+        if not values:
+            raise HTTPException(400, 'Bad request, no data informed.')
         return values

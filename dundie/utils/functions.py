@@ -1,5 +1,5 @@
-from dundie.serializers import UserPatchRequest
 from dundie.models import User
+from dundie.serializers import UserPatchRequest
 
 
 def apply_user_patch(user: User, patch_data: UserPatchRequest) -> None:

@@ -5,10 +5,10 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from dundie.auth.functions import AuthenticatedUser
 from dundie.db import ActiveSession
 from dundie.models.user import User
-from dundie.serializers import UserRequest, UserResponse, UserPatchRequest
-from dundie.auth.functions import AuthenticatedUser
+from dundie.serializers import UserPatchRequest, UserRequest, UserResponse
 from dundie.utils.functions import apply_user_patch
 
 router = APIRouter()
@@ -128,16 +128,16 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
 @router.patch(
     '/{username}',
     summary='Updates partialy the user data',
-    response_model=UserResponse
+    response_model=UserResponse,
 )
 async def update_bio_and_avatar(
     *,
     username: str,
     session: Session = ActiveSession,
     patch_data: UserPatchRequest,
-    current_user: User = AuthenticatedUser
+    current_user: User = AuthenticatedUser,
 ):
-    """Update an already registered user"""
+    """Update partialy an already registered user"""
 
     # Checks if the sent user exists
     stmt = select(User).where(User.username == username)
@@ -146,10 +146,7 @@ async def update_bio_and_avatar(
 
     # Checks if the current_user id differs from the URL user id
     # and if the current_user is a superuser
-    if (
-        current_user.id != user.id
-        and not current_user.superuser
-    ):
+    if current_user.id != user.id and not current_user.superuser:
         raise HTTPException(403, 'Permission denied to update this user')
 
     # Apply updates to the user instance

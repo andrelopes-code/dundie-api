@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Callable
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlmodel import Session, select
@@ -112,6 +112,50 @@ def get_current_user(
     return user
 
 
+async def get_user_if_change_password_is_allowed(
+    *,
+    request: Request,
+    username: str,
+    pwd_reset_token: str | None = None
+) -> User:
+    """
+    Returns User if one of the conditions is met.
+
+    - there is a valid pwd_reset_token passed in the url, or
+    - authenticated user is superuser, or
+    - authenticated user is the User
+    """
+    target_user = get_user(username)
+    if not target_user:
+        raise HTTPException(404, 'User not found')
+
+    try:
+        valid_pwd_reset_token = (
+            get_current_user(token=pwd_reset_token or "") == target_user
+        )
+    except HTTPException:
+        valid_pwd_reset_token = False
+
+    try:
+        authenticated_user = get_current_user(token='', request=request)
+    except HTTPException:
+        authenticated_user = False
+
+    if any(
+        [
+            valid_pwd_reset_token,
+            authenticated_user and authenticated_user.superuser,
+            authenticated_user and authenticated_user.id == target_user.id
+        ]
+    ):
+        return target_user
+
+    raise HTTPException(
+        403,
+        "You are not allowed to change this user's password"
+    )
+
+
 # Dependencies FASTAPI
 
 
@@ -148,3 +192,4 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
 
 AuthenticatedUser = Depends(get_current_active_user)
 SuperUser = Depends(user_is_superuser)
+CanChangeUserPassword = Depends(get_user_if_change_password_is_allowed)

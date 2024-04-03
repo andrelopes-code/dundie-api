@@ -5,7 +5,11 @@ from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from dundie.auth.functions import AuthenticatedUser, CanChangeUserPassword
+from dundie.auth.functions import (
+    AuthenticatedUser,
+    CanChangeUserPassword,
+    SuperUser
+)
 from dundie.db import ActiveSession
 from dundie.models.user import User
 from dundie.security import verify_password
@@ -19,25 +23,45 @@ from dundie.serializers import (
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch
 
+from dundie.routes.descriptions import (
+    LIST_USERS_DESC,
+    GET_USER_BY_USERNAME_DESC,
+    CREATE_USER_DESC,
+    PATCH_USER_DATA_DESC,
+    CHANGE_USER_PASSWORD_DESC,
+    PASSWORD_RESET_EMAIL_DESC,
+)
+
 router = APIRouter()
 
 
 @router.get(
     '/',
     summary='List all users',
+    description=LIST_USERS_DESC,
     dependencies=[AuthenticatedUser],
     response_model=List[UserResponse],
 )
 async def list_users(*, session: Session = ActiveSession):
     """
-    List all users.
+    This function handles the GET request to retrieve a list of all users
+    registered in the system. It requires authentication for access.
+    Upon successful authentication, it queries the database to fetch all
+    user records and returns them as a list of UserResponse objects.
 
-    Arguments:
-    - session (Session): An active database session.
+    Args:
+        - session (Session, optional): An active session to interact with the
+        database. Defaults to ActiveSession.
 
     Returns:
-    - List[UserResponse]: A list of user responses containing user data.
+        List[UserResponse]: A list of user objects containing user details
+        such as username, email, etc.
+
+    Raises:
+        HTTPException: An HTTP exception with status code 204 is raised if the
+        user list is empty.
     """
+
     # TODO: Order
     try:
         stmt = select(User)
@@ -54,6 +78,7 @@ async def list_users(*, session: Session = ActiveSession):
 @router.get(
     '/{username}',
     summary='Get a user by username',
+    description=GET_USER_BY_USERNAME_DESC,
     dependencies=[AuthenticatedUser],
     response_model=UserResponse,
 )
@@ -61,19 +86,25 @@ async def get_user_by_username(
     *, session: Session = ActiveSession, username: str
 ):
     """
-    Get a user by username.
+    This function handles the GET request to retrieve a user by their username.
+    It requires authentication for access. Upon successful authentication,
+    it queries the database to fetch the user record corresponding to the
+    provided username and returns it as a UserResponse object.
 
     Args:
-    - session (Session): An active session object for database operations.
-    - username (str): The username of the user to retrieve.
+        - session (Session, optional): An active session to interact with the
+        database. Defaults to ActiveSession.
+        - username (str): The username of the user to retrieve.
 
     Returns:
-    - UserResponse: A response containing the user information.
+        UserResponse: An object containing details of the user such as
+        username, email, etc.
 
     Raises:
-    - HTTPException: If the user with the specified username is not found
-    (status code 404).
+        HTTPException: An HTTP exception with status code 404 is raised if
+        the user corresponding to the provided username is not found.
     """
+
     try:
         stmt = select(User).where(User.username == username)
         user = session.exec(stmt).first()
@@ -89,25 +120,36 @@ async def get_user_by_username(
 @router.post(
     '/',
     summary='Creates a new user',
+    description=CREATE_USER_DESC,
     status_code=201,
-    dependencies=[],
+    dependencies=[SuperUser],
     response_model=UserResponse,
 )
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """
-    Creates a new user.
+    This function handles the POST request to create a new user. Access is
+    restricted to super users only. It validates the input data and ensures
+    that the username and email are unique before adding the new user to
+    the database.
 
     Args:
-    - session (Session): The active session to interact with the database.
-    - user (UserRequest): The data representing the new user to be created.
+        - session (Session, optional): An active session to interact with the
+        database. Defaults to ActiveSession.
+        - user (UserRequest): An object containing the details of the user to
+        be created.
 
     Returns:
-    - User: The newly created user object.
+        UserResponse: An object containing details of the newly created user
+        such as username, email, etc.
 
     Raises:
-    - HTTPException: If there is a constraint violation error during the
-    database transaction.
+        HTTPException:
+        - An HTTP exception with status code 409 is raised if the provided
+        username or email is already in use.
+        - An HTTP exception with status code 500 is raised if there is an
+        integrity error while committing to the database.
     """
+
     # Checks if there is already a user with that username
     stmt = select(User).where(User.username == user.username)
     if session.exec(stmt).first():
@@ -136,6 +178,8 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
 @router.patch(
     '/{username}',
     summary='Updates partialy the user data',
+    description=PATCH_USER_DATA_DESC,
+    dependencies=[AuthenticatedUser],
     response_model=UserResponse,
 )
 async def update_bio_and_avatar(
@@ -145,7 +189,37 @@ async def update_bio_and_avatar(
     patch_data: UserPatchRequest,
     current_user: User = AuthenticatedUser,
 ):
-    """Update partialy an already registered user"""
+    """
+    This function handles the PATCH request to update partial data of an
+    already registered user. Authentication is required to access this
+    endpoint. It checks if the user making the request exists and has the
+    necessary permissions to perform the update. If the user is not a super
+    user, they can only update their own data. Super users can update any
+    user's data.
+
+    Args:
+        - username (str): The username of the user whose data needs to be
+        updated.
+        - session (Session, optional): An active session to interact with the
+        database. Defaults to ActiveSession.
+        - patch_data (UserPatchRequest): An object containing the partial data
+        to be updated for the user.
+        - current_user (User): The currently authenticated user. Defaults to
+        AuthenticatedUser.
+
+    Returns:
+        UserResponse: An object containing the updated details of the user
+        such as username, email, etc.
+
+    Raises:
+        HTTPException:
+        - An HTTP exception with status code 404 is raised if the user
+        corresponding to the provided username is not found.
+        - An HTTP exception with status code 403 is raised if the current
+        user does not have permission to update the user data.
+        - An HTTP exception with status code 500 is raised if there is an
+        integrity error while committing to the database.
+    """
 
     # Checks if the sent user exists
     stmt = select(User).where(User.username == username)
@@ -175,6 +249,7 @@ async def update_bio_and_avatar(
 @router.post(
     '/{username}/password',
     summary='Changes the specified user password',
+    description=CHANGE_USER_PASSWORD_DESC,
     dependencies=[AuthenticatedUser],
     response_model=UserResponse,
 )
@@ -185,21 +260,33 @@ async def change_user_password(
     user: User = CanChangeUserPassword,
 ):
     """
-    Changes the specified user password.
+    This function handles the POST request to change the password of the
+    specified user. Authentication is required to access this endpoint.
+    It verifies that the new password is different from the current password
+    before updating it in the database.
 
     Args:
-        - username (str): The username of the user whose password is being
-        changed.
-        - patch_data (UserPasswordPatchRequest): The data containing the new
-        hashed password.
-        - session (Session, optional): The active database session.
-        Defaults to ActiveSession.
-        - user (User, optional): The user object representing the userwhose
-        password is being changed. Defaults to CanChangeUserPassword.
+        - username (str): The username of the user whose password needs to
+        be changed.
+        - patch_data (UserPasswordPatchRequest): An object containing the
+        new hashed password.
+        - session (Session, optional): An active session to interact with
+        the database. Defaults to ActiveSession.
+        - user (User): The user whose password is being changed. Defaults
+        to CanChangeUserPassword.
 
     Returns:
-        - User
+        UserResponse: An object containing the updated details of the user
+        such as username, email, etc.
+
+    Raises:
+        HTTPException:
+        - An HTTP exception with status code 400 is raised if the new
+        password matches the current one.
+        - An HTTP exception with status code 500 is raised if there is an
+        integrity error while committing to the database.
     """
+
     # Checks if the new password is the same as the current password
     if verify_password(patch_data.password, user.password):
         raise HTTPException(400, 'New password matches the current one')
@@ -223,14 +310,21 @@ async def change_user_password(
 @router.post(
     '/pwd_reset_token',
     summary='Send an email to reset the password',
+    description=PASSWORD_RESET_EMAIL_DESC
 )
 async def send_password_reset_token(email_request: EmailRequest):
     """
-    Send a password reset token to the specified email address.
+    This function handles the POST request to send a password reset token to
+    the specified email address. It triggers the sending of an email
+    containing the token required for resetting the password.
 
     Args:
-        email (EmailRequest): The email address to send the password
-        reset token to.
+    email_request (EmailRequest): An object containing the email address to
+    which the password reset token will be sent.
+
+    Returns:
+        dict: A dictionary containing a message indicating the status of the
+        password reset token email delivery.
     """
 
     try_to_send_password_reset_email(email_request.email)

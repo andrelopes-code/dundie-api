@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 from dundie.auth.functions import (
     AuthenticatedUser,
     CanChangeUserPassword,
-    SuperUser
+    SuperUser,
 )
 from dundie.db import ActiveSession
 from dundie.models.user import User

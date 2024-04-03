@@ -50,6 +50,24 @@ def create_access_token(
 create_refresh_token = partial(create_access_token, scope='refresh_token')
 
 
+def correct_authorization_header_syntax(request: Request):
+    if authorization := request.headers.get('Authorization'):
+        try:
+            splited = authorization.split(' ')
+            
+            # Checks if the token was sent
+            splited[1]
+
+            if splited[0].lower() != 'bearer':
+                raise HTTPException(
+                    401,
+                    "Invalid authentication method. Use Bearer."
+                )
+
+        except IndexError:
+            raise exp401('Invalid Authorization header format')
+
+
 def authenticate_user(
     get_user: Callable, username: str, password: str
 ) -> User | None:
@@ -71,6 +89,7 @@ def get_user(username) -> User | None:
 
 
 def get_current_user(
+    _: None = Depends(correct_authorization_header_syntax),
     token: str = Depends(oauth2_scheme),
     request: Request = None,
     fresh: bool = False,
@@ -80,11 +99,11 @@ def get_current_user(
     # Extract the token from the Authorization header
     # The header is in the format: `Bearer <token>`
     if request:
-        if authorization := request.headers.get('authorization'):
+        if authorization := request.headers.get('Authorization'):
             try:
                 token = authorization.split(' ')[1]
             except IndexError:
-                raise exp401('Invalid authorization header format')
+                raise exp401('Invalid Authorization header format')
 
     # Verify the token and get the username from the payload
     # The token is decoded using the SECRET_KEY and the ALGORITHM specified

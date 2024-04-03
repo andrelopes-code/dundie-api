@@ -10,11 +10,13 @@ from dundie.db import ActiveSession
 from dundie.models.user import User
 from dundie.security import verify_password
 from dundie.serializers import (
+    EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
     UserRequest,
     UserResponse,
 )
+from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch
 
 router = APIRouter()
@@ -116,7 +118,7 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     if session.exec(stmt).first():
         raise HTTPException(409, 'Email alredy in use')
 
-    db_user = User.from_orm(user)
+    db_user = User.model_validate(user)
     session.add(db_user)
 
     try:
@@ -174,13 +176,13 @@ async def update_bio_and_avatar(
     '/{username}/password',
     summary='Changes the specified user password',
     dependencies=[AuthenticatedUser],
-    response_model=UserResponse
+    response_model=UserResponse,
 )
 async def change_user_password(
     username: str,
     patch_data: UserPasswordPatchRequest,
     session: Session = ActiveSession,
-    user: User = CanChangeUserPassword
+    user: User = CanChangeUserPassword,
 ):
     """
     Changes the specified user password.
@@ -216,3 +218,24 @@ async def change_user_password(
         raise HTTPException(500, 'Database IntegrityError')
 
     return user
+
+
+@router.post(
+    '/pwd_reset_token',
+    summary='Send an email to reset the password',
+)
+async def send_password_reset_token(email_request: EmailRequest):
+    """
+    Send a password reset token to the specified email address.
+
+    Args:
+        email (EmailRequest): The email address to send the password
+        reset token to.
+    """
+
+    try_to_send_password_reset_email(email_request.email)
+
+    return {
+        'message': 'If we have found a user with that email, '
+        + "we've sent a password reset token to it."
+    }

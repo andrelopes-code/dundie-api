@@ -16,7 +16,7 @@ settings = Dynaconf(
 )
 
 settings.validators.register(
-    Validator("security.SECRET_KEY", must_exist=True, is_type_of=str),
+    Validator('security.SECRET_KEY', must_exist=True, is_type_of=str),
 )
 
 settings.validators.validate()

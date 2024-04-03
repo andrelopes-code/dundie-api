@@ -128,7 +128,7 @@ async def get_user_if_change_password_is_allowed(
 
     try:
         valid_pwd_reset_token = (
-            get_current_user(token=pwd_reset_token or "") == target_user
+            get_current_user(token=pwd_reset_token or '') == target_user
         )
     except HTTPException:
         valid_pwd_reset_token = False

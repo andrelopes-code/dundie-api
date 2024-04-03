@@ -54,14 +54,13 @@ def correct_authorization_header_syntax(request: Request):
     if authorization := request.headers.get('Authorization'):
         try:
             splited = authorization.split(' ')
-            
+
             # Checks if the token was sent
             splited[1]
 
             if splited[0].lower() != 'bearer':
                 raise HTTPException(
-                    401,
-                    "Invalid authentication method. Use Bearer."
+                    401, "Invalid authentication method. Use Bearer."
                 )
 
         except IndexError:

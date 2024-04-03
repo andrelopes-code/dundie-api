@@ -1,4 +1,3 @@
-
 LIST_USERS_DESC = """
 This endpoint retrieves a list of all users. It requires authentication to
 access. If successful, it returns a list of user information in the response

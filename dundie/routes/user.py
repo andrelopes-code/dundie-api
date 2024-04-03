@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -12,6 +12,14 @@ from dundie.auth.functions import (
 )
 from dundie.db import ActiveSession
 from dundie.models.user import User
+from dundie.routes.descriptions import (
+    CHANGE_USER_PASSWORD_DESC,
+    CREATE_USER_DESC,
+    GET_USER_BY_USERNAME_DESC,
+    LIST_USERS_DESC,
+    PASSWORD_RESET_EMAIL_DESC,
+    PATCH_USER_DATA_DESC,
+)
 from dundie.security import verify_password
 from dundie.serializers import (
     EmailRequest,
@@ -22,15 +30,6 @@ from dundie.serializers import (
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch
-
-from dundie.routes.descriptions import (
-    LIST_USERS_DESC,
-    GET_USER_BY_USERNAME_DESC,
-    CREATE_USER_DESC,
-    PATCH_USER_DATA_DESC,
-    CHANGE_USER_PASSWORD_DESC,
-    PASSWORD_RESET_EMAIL_DESC,
-)
 
 router = APIRouter()
 
@@ -313,9 +312,12 @@ async def change_user_password(
 @router.post(
     '/pwd_reset_token',
     summary='Send an email to reset the password',
-    description=PASSWORD_RESET_EMAIL_DESC
+    description=PASSWORD_RESET_EMAIL_DESC,
 )
-async def send_password_reset_token(email_request: EmailRequest):
+async def send_password_reset_token(
+    email_request: EmailRequest,
+    background_task: BackgroundTasks,
+):
     """
     This function handles the POST request to send a password reset token to
     the specified email address. It triggers the sending of an email
@@ -333,7 +335,10 @@ async def send_password_reset_token(email_request: EmailRequest):
         create a SMTP server.
     """
 
-    try_to_send_password_reset_email(email_request.email)
+    background_task.add_task(
+        try_to_send_password_reset_email,
+        email=email_request.email
+    )
 
     return {
         'message': 'If we have found a user with that email, '

@@ -1,5 +1,6 @@
 import unicodedata
 from typing import Optional
+from datetime import datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -18,6 +19,7 @@ class User(SQLModel, table=True):
     name: str = Field(max_length=255, nullable=False)
     dept: str = Field(max_length=255, nullable=False)
     currency: str = Field(nullable=False)
+    last_password_change: datetime | None = Field(default=None)
 
     @property
     def superuser(self):

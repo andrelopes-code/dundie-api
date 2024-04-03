@@ -250,7 +250,7 @@ async def update_bio_and_avatar(
     '/{username}/password',
     summary='Changes the specified user password',
     description=CHANGE_USER_PASSWORD_DESC,
-    dependencies=[AuthenticatedUser],
+    dependencies=[],
     response_model=UserResponse,
 )
 async def change_user_password(
@@ -285,6 +285,9 @@ async def change_user_password(
         password matches the current one.
         - An HTTP exception with status code 500 is raised if there is an
         integrity error while committing to the database.
+
+    TODO:
+        Add a password change limit and a User.last_password_change attr
     """
 
     # Checks if the new password is the same as the current password
@@ -325,6 +328,9 @@ async def send_password_reset_token(email_request: EmailRequest):
     Returns:
         dict: A dictionary containing a message indicating the status of the
         password reset token email delivery.
+
+    TODO:
+        create a SMTP server.
     """
 
     try_to_send_password_reset_email(email_request.email)

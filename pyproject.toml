@@ -26,6 +26,7 @@ python-multipart = "^0.0.9"
 psycopg2-binary = "^2.9.9"
 alembic = "^1.13.1"
 rich = "^13.7.1"
+email-validator = "^2.1.1"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
@@ -84,7 +85,7 @@ combine_as_imports = true
 [tool.flake8]
 # Configurações do Flake8
 max-line-length = 79
-ignore = "E203, E266, E501, W503"
+ignore = "E203, E266, E501, W503, W293"
 exclude = ".git, __pycache__, .venv, .eggs, *.egg"
 
 [tool.mypy]

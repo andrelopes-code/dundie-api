@@ -3,7 +3,6 @@
 Revision ID: 3372da74b65e
 Revises: e919ac17f2e2
 Create Date: 2024-03-28 12:37:32.361603
-
 """
 
 from typing import Sequence, Union

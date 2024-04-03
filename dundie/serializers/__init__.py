@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from .user import (
+    EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
     UserRequest,
@@ -13,4 +14,5 @@ __all__ = [
     'BaseModel',
     'UserPatchRequest',
     'UserPasswordPatchRequest',
+    'EmailRequest',
 ]

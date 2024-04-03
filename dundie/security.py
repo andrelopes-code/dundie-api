@@ -63,7 +63,7 @@ class HashedPassword(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v, _):
         """
         Class method to validate the input and return a new instance with
         the hashed password.
@@ -75,7 +75,7 @@ class HashedPassword(str):
             Instance: A new instance with the hashed password.
         """
         if not isinstance(v, str):
-            raise TypeError("string required")
+            raise TypeError('string required')
 
         hashed_password = get_password_hash(v)
 

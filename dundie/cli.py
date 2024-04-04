@@ -1,4 +1,5 @@
 import typer
+from rich import print as bprint
 from rich.console import Console
 from rich.table import Table
 from sqlmodel import Session, select
@@ -6,7 +7,7 @@ from sqlmodel import Session, select
 from dundie.config import settings
 from dundie.db import engine
 from dundie.models import User
-from dundie.models.user import get_username
+from dundie.utils.utils import get_username
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
 
@@ -38,7 +39,7 @@ def shell():
 def user_list():
     """Lists all users"""
     table = Table(title='dundie users')
-    fields = ['name', 'username', 'dept', 'email', 'currency']
+    fields = ['name', 'username', 'dept', 'email', 'currency', 'created_at']
     for header in fields:
         table.add_column(header, style='magenta')
 
@@ -61,16 +62,20 @@ def create_user(
 ):
     """Create user"""
     with Session(engine) as session:
-        user = User(
-            name=name,
-            email=email,
-            password=password,
-            dept=dept,
-            username=username or get_username(name),
-            currency=currency,
-        )
+        data = {
+            'name': name,
+            'email': email,
+            'password': password,
+            'dept': dept,
+            'username': username or get_username(name),
+            'currency': currency
+        }
+
+        user = User.model_validate(data)
+
         session.add(user)
         session.commit()
         session.refresh(user)
         typer.echo(f"created user '{user.username}'")
+        bprint(user.model_dump())
         return user

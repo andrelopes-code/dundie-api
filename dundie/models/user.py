@@ -49,7 +49,7 @@ class User(SQLModel, table=True):
     # Populates a `.user` on `Balance`
     _balance: Optional["Balance"] = Relationship(
         back_populates="user",
-        sa_relationship_kwargs={"lazy": "dynamic"}
+        sa_relationship_kwargs={"lazy": "select"}
     )
 
     @property

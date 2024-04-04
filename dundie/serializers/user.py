@@ -7,7 +7,7 @@ from email_validator import (
 from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
 
-from dundie.models.user import get_username
+from dundie.utils.utils import get_username
 from dundie.security import get_password_hash
 
 

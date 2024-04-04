@@ -1,4 +1,5 @@
 from datetime import datetime
+from dundie.utils.utils import get_utcnow
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -14,7 +15,10 @@ class Transaction(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", nullable=False)
     from_id: int = Field(foreign_key="user.id", nullable=False)
     value: int = Field(nullable=False)
-    date: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    date: datetime = Field(
+        default_factory=get_utcnow,
+        nullable=False
+    )
 
     # Populates a `.incomes` on `User`
     user: Optional["User"] = Relationship(
@@ -43,9 +47,9 @@ class Balance(SQLModel, table=True):
     )
     value: int = Field(nullable=False)
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=get_utcnow,
         nullable=False,
-        sa_column_kwargs={"onupdate": datetime.utcnow}
+        sa_column_kwargs={"onupdate": get_utcnow}
     )
 
     # Populates a `._balance` on `User`

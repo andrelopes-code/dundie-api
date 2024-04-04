@@ -1,62 +1,52 @@
-from __future__ import annotations
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
-from sqlmodel import Field, SQLModel, Relationship
 
-# Fixes the 'circular import' problem
+from sqlmodel import Field, Relationship, SQLModel
+
 if TYPE_CHECKING:
     from dundie.models.user import User
 
 
 class Transaction(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int | None = Field(foreign_key='user.id', nullable=False)
-    from_id: int | None = Field(foreign_key='user.id', nullable=False)
-    value: int = Field(nullable=False)
-    date: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False
-    )
+    """Represents the Transaction Model"""
 
-    # Define 'user' como instância opcional de 'User'. O relacionamento é
-    # estabelecido com base em 'user_id' de Transaction igual a 'id' de User
-    # ('primaryjoin'). Relacionamento bidirecional, permitindo acesso a
-    # transações associadas a um usuário ('back_populates').
-    user: Optional[User] = Relationship(
-        back_populates='incomes',
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", nullable=False)
+    from_id: int = Field(foreign_key="user.id", nullable=False)
+    value: int = Field(nullable=False)
+    date: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+    # Populates a `.incomes` on `User`
+    user: Optional["User"] = Relationship(
+        back_populates="incomes",
         sa_relationship_kwargs={
-            'primaryjoin': 'Transaction.user_id == User.id'
-        }
-    ),
-    # Define 'from_user' como instância opcional de 'User'. O relacionamento é
-    # estabelecido com base em 'from_id' de Transaction igual a 'id' de User
-    # ('primaryjoin'). Relacionamento bidirecional, permitindo acesso a
-    # transações associadas ao usuário que realizou a despesa
-    # ('back_populates').
-    from_user: Optional[User] = Relationship(
-        back_populates='expenses',
+            "primaryjoin": 'Transaction.user_id == User.id'
+        },
+    )
+    # Populates a `.expenses` on `User`
+    from_user: Optional["User"] = Relationship(
+        back_populates="expenses",
         sa_relationship_kwargs={
-            'primaryjoin': 'Transaction.from_id == User.id'
-        }
+            "primaryjoin": 'Transaction.from_id == User.id'
+        },
     )
 
 
 class Balance(SQLModel, table=True):
+    """Store the balance of a user account"""
+
     user_id: int = Field(
-        foreign_key='user.id',
+        foreign_key="user.id",
         nullable=False,
         primary_key=True,
-        unique=True
+        unique=True,
     )
     value: int = Field(nullable=False)
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=datetime.utcnow,
         nullable=False,
-        sa_column_kwargs={
-            'onupdate': lambda: datetime.now(timezone.utc)
-        }
+        sa_column_kwargs={"onupdate": datetime.utcnow}
     )
 
-    user: Optional[User] = Relationship(
-        back_populates='_balance'
-    )
+    # Populates a `._balance` on `User`
+    user: Optional["User"] = Relationship(back_populates="_balance")

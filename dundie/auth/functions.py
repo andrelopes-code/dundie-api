@@ -152,17 +152,32 @@ async def get_user_if_change_password_is_allowed(
         valid_pwd_reset_token = False
 
     try:
-        authenticated_user = get_current_user(token='', request=request)
+        current_user = get_current_user(token='', request=request)
     except HTTPException:
-        authenticated_user = False
+        current_user = False
 
     if any(
         [
             valid_pwd_reset_token,
-            authenticated_user and authenticated_user.superuser,
-            authenticated_user and authenticated_user.id == target_user.id,
+            current_user and current_user.superuser,
+            current_user and current_user.id == target_user.id,
         ]
     ):
+        if (
+            not current_user.superuser and
+            target_user.last_password_change is not None
+        ):
+
+            # Checks if the password has been changed recently
+            limit_seconds = settings.security.PWD_RESET_TIME_LIMIT_SECONDS
+            now = datetime.now(timezone.utc)
+            user_last_change = now - target_user.last_password_change
+            if user_last_change.seconds < limit_seconds:
+                raise HTTPException(
+                    403,
+                    "Your password has recently been changed, Try again later."
+                )
+
         return target_user
 
     raise HTTPException(

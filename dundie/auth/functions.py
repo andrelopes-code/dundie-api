@@ -11,7 +11,7 @@ from dundie.auth.models import TokenData
 from dundie.config import settings
 from dundie.db import engine
 from dundie.models.user import User
-from dundie.routes.status import exp401
+from dundie.utils.status import exp401
 from dundie.security import verify_password
 
 SECRET_KEY = settings.security.secret_key

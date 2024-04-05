@@ -13,7 +13,7 @@ from dundie.auth.functions import (
 from dundie.auth.models import RefreshToken, Token
 from dundie.config import settings
 from dundie.models.user import User
-from dundie.routes.status import exp401
+from dundie.utils.status import exp401
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.security.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.security.refresh_token_expire_minutes

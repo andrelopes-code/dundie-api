@@ -3,7 +3,7 @@ from sqlmodel import Session
 from dundie.db import ActiveSession
 from dundie.auth.functions import AuthenticatedUser
 from dundie.models import User
-from dundie.tasks.transaction import check_and_transfer_points
+from dundie.controllers.transaction import check_and_transfer_points
 from dundie.auth.functions import get_user
 
 router = APIRouter()
@@ -13,7 +13,7 @@ router = APIRouter()
     '/{username}',
     summary='Transfer poinst from an user to another user',
 )
-def transfer_points_to_another_user(
+async def transfer_points_to_another_user(
     username: str,
     points: int,
     auth_user: User = AuthenticatedUser,

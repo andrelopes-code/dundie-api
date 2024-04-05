@@ -9,6 +9,7 @@ from dundie.db import engine
 from dundie.models import User, Balance
 from dundie.utils.utils import get_username
 
+
 main = typer.Typer(name='dundie CLI', add_completion=False)
 
 
@@ -85,6 +86,20 @@ def create_user(
         session.commit()
         session.refresh(user)
 
-        typer.echo(f"created user '{user.username}'")
+        typer.echo(f"Created user '{user.username}'")
         bprint(user.model_dump())
         return user
+
+
+@main.command()
+def transfer(points: int, username: str):
+    """Transfer points to a user"""
+
+    from dundie.controllers.transaction import check_and_transfer_points
+
+    check_and_transfer_points(
+        points=points,
+        username=username
+    )
+
+    typer.echo(f"Transferred {points} points to '{username}'")

@@ -32,11 +32,11 @@ from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch
 from dundie.controllers import create_user_and_balance
 
-router = APIRouter()
+router = APIRouter(redirect_slashes=False)
 
 
 @router.get(
-    '/',
+    '',  # ROOT '/'
     summary='List all users',
     description=LIST_USERS_DESC,
     dependencies=[AuthenticatedUser],
@@ -118,7 +118,7 @@ async def get_user_by_username(
 
 
 @router.post(
-    '/',
+    '',  # ROOT '/'
     summary='Creates a new user',
     description=CREATE_USER_DESC,
     status_code=201,

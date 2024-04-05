@@ -14,7 +14,7 @@ class Transaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", nullable=False)
     from_id: int = Field(foreign_key="user.id", nullable=False)
-    value: int = Field(nullable=False)
+    value: int = Field(nullable=False, ge=0)
     date: datetime = Field(
         default_factory=get_utcnow,
         nullable=False
@@ -34,6 +34,9 @@ class Transaction(SQLModel, table=True):
             "primaryjoin": 'Transaction.from_id == User.id'
         },
     )
+
+    def transfer_points(self):
+        print("TRANSFER_POINTS_CHECK")
 
 
 class Balance(SQLModel, table=True):

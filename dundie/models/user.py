@@ -54,9 +54,7 @@ class User(SQLModel, table=True):
     @property
     def balance(self) -> int:
         """Returns the current balance of the user"""
-        if (user_balance := self._balance.first()) is not None:
-            return user_balance.value
-        return 0
+        return self._balance.value
 
     @property
     def superuser(self):

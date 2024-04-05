@@ -80,10 +80,14 @@ def authenticate_user(
     return user
 
 
-def get_user(username) -> User | None:
+def get_user(username, session: Session | None = None) -> User | None:
     """Get user from database"""
     stmt = select(User).where(User.username == username)
-    with Session(engine) as session:
+
+    if not session:
+        with Session(engine) as session:
+            return session.exec(stmt).first()
+    else:
         return session.exec(stmt).first()
 
 

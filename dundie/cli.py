@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from dundie.config import settings
 from dundie.db import engine
-from dundie.models import User
+from dundie.models import User, Balance
 from dundie.utils.utils import get_username
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
@@ -76,6 +76,15 @@ def create_user(
         session.add(user)
         session.commit()
         session.refresh(user)
+
+        user_balance: Balance = Balance(
+            user_id=user.id,
+            value=0
+        )
+        session.add(user_balance)
+        session.commit()
+        session.refresh(user)
+
         typer.echo(f"created user '{user.username}'")
         bprint(user.model_dump())
         return user

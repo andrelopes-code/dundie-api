@@ -2,7 +2,6 @@ from datetime import datetime
 from dundie.utils.utils import get_utcnow
 from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, SQLModel, Relationship
-
 from dundie.security import HashedPassword
 
 if TYPE_CHECKING:

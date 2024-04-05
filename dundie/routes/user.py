@@ -11,7 +11,7 @@ from dundie.auth.functions import (
     SuperUser,
 )
 from dundie.db import ActiveSession
-from dundie.models.user import User
+from dundie.models.user import User, Balance
 from dundie.routes.descriptions import (
     CHANGE_USER_PASSWORD_DESC,
     CREATE_USER_DESC,
@@ -161,15 +161,25 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
 
     db_user = User.model_validate(user)
     session.add(db_user)
+    try:
+        session.commit()
+        session.refresh(db_user)
 
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(500, 'Database IntegrityError')
+
+    user_balance: Balance = Balance(
+        user_id=db_user.id,
+        value=0
+    )
+    session.add(user_balance)
     try:
         session.commit()
 
     except IntegrityError:
         session.rollback()
         raise HTTPException(500, 'Database IntegrityError')
-
-    session.refresh(db_user)
 
     return db_user
 

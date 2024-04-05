@@ -11,8 +11,8 @@ from dundie.auth.models import TokenData
 from dundie.config import settings
 from dundie.db import engine
 from dundie.models.user import User
-from dundie.utils.status import exp401
 from dundie.security import verify_password
+from dundie.utils.status import exp401
 
 SECRET_KEY = settings.security.secret_key
 ALGORITHM = settings.security.algorithm
@@ -168,8 +168,8 @@ async def get_user_if_change_password_is_allowed(
         ]
     ):
         if (
-            not current_user.superuser and
-            target_user.last_password_change is not None
+            not current_user.superuser
+            and target_user.last_password_change is not None
         ):
 
             # Checks if the password has been changed recently
@@ -179,7 +179,7 @@ async def get_user_if_change_password_is_allowed(
             if user_last_change.seconds < limit_seconds:
                 raise HTTPException(
                     403,
-                    "Your password has recently been changed, Try again later."
+                    "Your password has recently been changed, Try again later.",
                 )
 
         return target_user

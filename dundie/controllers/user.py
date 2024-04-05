@@ -1,7 +1,8 @@
-from dundie.models import User, Balance
-from sqlmodel import Session
-from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session
+
+from dundie.models import Balance, User
 
 
 def create_user_and_balance(user_data, session: Session) -> User:
@@ -15,10 +16,7 @@ def create_user_and_balance(user_data, session: Session) -> User:
         session.rollback()
         raise HTTPException(500, 'Database IntegrityError')
 
-    user_balance: Balance = Balance(
-        user_id=db_user.id,
-        value=0
-    )
+    user_balance: Balance = Balance(user_id=db_user.id, value=0)
     session.add(user_balance)
     try:
         session.commit()

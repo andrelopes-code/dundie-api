@@ -1,4 +1,3 @@
-
 class SystemDefaultUserNotFound(Exception):
     """Raised when the system default user is not found."""
 

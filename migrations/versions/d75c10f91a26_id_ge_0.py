@@ -1,20 +1,20 @@
-"""user model refactor v2
+"""id ge 0
 
-Revision ID: 91f7356420d1
-Revises: 71e1a49d764f
-Create Date: 2024-04-04 12:44:21.102968
+Revision ID: d75c10f91a26
+Revises: 91f7356420d1
+Create Date: 2024-04-05 11:36:18.771720
 
 """
-
 from typing import Sequence, Union
 
+from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-from alembic import op
+
 
 # revision identifiers, used by Alembic.
-revision: str = '91f7356420d1'
-down_revision: Union[str, None] = '71e1a49d764f'
+revision: str = 'd75c10f91a26'
+down_revision: Union[str, None] = '91f7356420d1'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

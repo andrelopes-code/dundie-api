@@ -1,9 +1,10 @@
-from dundie.models import User, Transaction, Balance
-from dundie.auth.functions import get_user
 from fastapi import HTTPException
 from sqlmodel import Session, select
+
+from dundie.auth.functions import get_user
 from dundie.db import engine
 from dundie.exc import SystemDefaultUserNotFound
+from dundie.models import Balance, Transaction, User
 
 
 def make_transaction(
@@ -14,9 +15,7 @@ def make_transaction(
 ):
 
     transaction = Transaction(
-        user_id=to_user.id,
-        from_id=from_user.id,
-        value=points
+        user_id=to_user.id, from_id=from_user.id, value=points
     )
 
     # Gets the 'from_user' Balance object
@@ -40,15 +39,14 @@ def make_transaction(
         session.refresh(transaction)
     except Exception:
         raise HTTPException(
-            500,
-            'An error occurred while performing the transfer'
+            500, 'An error occurred while performing the transfer'
         )
 
     return {
         'from': from_user.username,
         'to': to_user.username,
         'value': points,
-        'date': transaction.date
+        'date': transaction.date,
     }
 
 
@@ -56,7 +54,7 @@ def check_and_transfer_points(
     username: str,
     points: int,
     from_user: User | None = None,
-    session: Session | None = None
+    session: Session | None = None,
 ):
 
     # Checks whether the transaction can be carried out
@@ -79,7 +77,7 @@ def check_and_transfer_points(
             from_user=from_user,
             to_user=to_user,
             points=points,
-            session=session
+            session=session,
         )
     else:
         with Session(engine) as session:
@@ -87,7 +85,7 @@ def check_and_transfer_points(
                 from_user=from_user,
                 to_user=to_user,
                 points=points,
-                session=session
+                session=session,
             )
 
     return transaction

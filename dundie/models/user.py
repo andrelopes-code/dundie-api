@@ -1,11 +1,13 @@
 from datetime import datetime
-from dundie.utils.utils import get_utcnow
 from typing import TYPE_CHECKING, Optional
-from sqlmodel import Field, SQLModel, Relationship
+
+from sqlmodel import Field, Relationship, SQLModel
+
 from dundie.security import HashedPassword
+from dundie.utils.utils import get_utcnow
 
 if TYPE_CHECKING:
-    from .transaction import Transaction, Balance
+    from .transaction import Balance, Transaction
 
 
 class User(SQLModel, table=True):
@@ -14,10 +16,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(max_length=255, unique=True, nullable=False)
     username: str = Field(
-        max_length=255,
-        unique=True,
-        nullable=False,
-        index=True
+        max_length=255, unique=True, nullable=False, index=True
     )
     avatar: Optional[str] = None
     bio: Optional[str] = None
@@ -25,10 +24,9 @@ class User(SQLModel, table=True):
     name: str = Field(max_length=255, nullable=False)
     dept: str = Field(max_length=255, nullable=False)
     currency: str = Field(nullable=False)
-    created_at: datetime = Field(
-        default_factory=get_utcnow,
-        nullable=False
-    )
+    created_at: datetime = Field(default_factory=get_utcnow, nullable=False)
+    is_active: bool = Field(default=True, nullable=False)
+    private: bool = Field(default=False, nullable=False)
     last_password_change: datetime | None = Field(default=None)
 
     # Populates a `.user` on `Transaction`
@@ -47,8 +45,7 @@ class User(SQLModel, table=True):
     )
     # Populates a `.user` on `Balance`
     _balance: Optional["Balance"] = Relationship(
-        back_populates="user",
-        sa_relationship_kwargs={"lazy": "select"}
+        back_populates="user", sa_relationship_kwargs={"lazy": "select"}
     )
 
     @property

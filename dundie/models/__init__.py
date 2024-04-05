@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel
 
+from .transaction import Balance, Transaction
 from .user import User
-from .transaction import Transaction, Balance
 
 __all__ = ['User', 'SQLModel', 'Transaction', 'Balance']

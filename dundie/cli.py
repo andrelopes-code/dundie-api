@@ -6,9 +6,8 @@ from sqlmodel import Session, select
 
 from dundie.config import settings
 from dundie.db import engine
-from dundie.models import User, Balance
+from dundie.models import Balance, User
 from dundie.utils.utils import get_username
-
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
 
@@ -69,7 +68,7 @@ def create_user(
             'password': password,
             'dept': dept,
             'username': username or get_username(name),
-            'currency': currency
+            'currency': currency,
         }
 
         user = User.model_validate(data)
@@ -78,10 +77,7 @@ def create_user(
         session.commit()
         session.refresh(user)
 
-        user_balance: Balance = Balance(
-            user_id=user.id,
-            value=0
-        )
+        user_balance: Balance = Balance(user_id=user.id, value=0)
         session.add(user_balance)
         session.commit()
         session.refresh(user)
@@ -97,9 +93,6 @@ def transfer(points: int, username: str):
 
     from dundie.controllers.transaction import check_and_transfer_points
 
-    check_and_transfer_points(
-        points=points,
-        username=username
-    )
+    check_and_transfer_points(points=points, username=username)
 
     typer.echo(f"Transferred {points} points to '{username}'")

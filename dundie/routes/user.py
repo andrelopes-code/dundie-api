@@ -10,6 +10,7 @@ from dundie.auth.functions import (
     CanChangeUserPassword,
     SuperUser,
 )
+from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
 from dundie.models import User
 from dundie.routes.descriptions import (
@@ -30,7 +31,6 @@ from dundie.serializers import (
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch
-from dundie.controllers import create_user_and_balance
 
 router = APIRouter(redirect_slashes=False)
 
@@ -327,8 +327,7 @@ async def send_password_reset_token(
     """
 
     background_task.add_task(
-        try_to_send_password_reset_email,
-        email=email_request.email
+        try_to_send_password_reset_email, email=email_request.email
     )
 
     return {

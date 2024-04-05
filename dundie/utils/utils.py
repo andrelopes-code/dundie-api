@@ -1,10 +1,10 @@
+import unicodedata
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
-import unicodedata
 
 if TYPE_CHECKING:
-    from dundie.serializers import UserPatchRequest
     from dundie.models import User
+    from dundie.serializers import UserPatchRequest
 
 
 def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:

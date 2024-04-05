@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlmodel import Session
 
 from dundie.auth.functions import AuthenticatedUser, get_user
@@ -19,11 +19,16 @@ async def transfer_points_to_another_user(
     auth_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
+    if auth_user.username == username:
+        raise HTTPException(400, 'It is not possible to transfer to yourself')
 
     from_user = get_user(username=auth_user.username, session=session)
 
     transaction = check_and_transfer_points(
-        from_user=from_user, points=points, session=session, username=username
+        from_user=from_user,
+        points=points,
+        session=session,
+        username=username
     )
 
     return transaction

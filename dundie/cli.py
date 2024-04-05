@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from dundie.config import settings
 from dundie.db import engine
-from dundie.models import Balance, User
+from dundie.models import Balance, User, Transaction
 from dundie.utils.utils import get_username
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
@@ -21,6 +21,8 @@ def shell():
         'select': select,
         'session': Session(engine),
         'User': User,
+        'Balance': Balance,
+        'Transaction': Transaction
     }
     typer.echo(f'Auto imports: {list(_vars.keys())}')
     try:
@@ -57,6 +59,8 @@ def create_user(
     email: str,
     password: str,
     dept: str,
+    active: bool = True,
+    private: bool = False,
     username: str | None = None,
     currency: str = 'USD',
 ):
@@ -69,6 +73,8 @@ def create_user(
             'dept': dept,
             'username': username or get_username(name),
             'currency': currency,
+            'is_active': active,
+            'private': private
         }
 
         user = User.model_validate(data)
@@ -96,3 +102,16 @@ def transfer(points: int, username: str):
     check_and_transfer_points(points=points, username=username)
 
     typer.echo(f"Transferred {points} points to '{username}'")
+
+
+@main.command()
+def disable_user(username):
+    with Session(engine) as session:
+        stmt = select(User).where(User.username == username)
+        user = session.exec(stmt).first()
+
+        user.is_active = False
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        bprint("user '{username}' deactivated")

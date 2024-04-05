@@ -63,6 +63,7 @@ async def list_users(*, session: Session = ActiveSession):
     """
 
     # TODO: Order
+    # TODO: Remove system and private users from the list
     try:
         stmt = select(User)
         users = session.exec(stmt).all()

@@ -1,6 +1,8 @@
 import unicodedata
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
+from functools import wraps
+import time
 
 if TYPE_CHECKING:
     from dundie.models import User
@@ -47,3 +49,15 @@ def get_username(name: str) -> str:
             chars.append(c)
 
     return ''.join(chars)
+
+
+def timer(func):
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        inicio = time.time()
+        resultado = await func(*args, **kwargs)
+        fim = time.time()
+        print(f"\033[36mTempo de execução: {fim - inicio}\033[m")
+        return resultado
+    return wrapper

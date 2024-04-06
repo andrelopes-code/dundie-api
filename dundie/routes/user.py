@@ -1,7 +1,8 @@
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.exceptions import HTTPException
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -42,14 +43,17 @@ router = APIRouter(redirect_slashes=False)
     dependencies=[AuthenticatedUser],
     response_model=List[UserResponse],
 )
-async def list_users(*, session: Session = ActiveSession):
+async def list_users(request: Request, *, session: Session = ActiveSession):
     """
     This function handles the GET request to retrieve a list of all users
     registered in the system. It requires authentication for access.
     Upon successful authentication, it queries the database to fetch all
     user records and returns them as a list of UserResponse objects.
+    If query params to 'sort' (sort=asc) are passed, it will do the query
+    with the sort method: descending, ascending, etc.
 
     Args:
+        - request: the Request object.
         - session (Session, optional): An active session to interact with the
         database. Defaults to ActiveSession.
 
@@ -62,10 +66,12 @@ async def list_users(*, session: Session = ActiveSession):
         user list is empty.
     """
 
-    # TODO: Order
-    # TODO: Remove system and private users from the list
+    # Query users who are not private or disabled
+    stmt = select(User).where(
+        and_(User.is_active == True, User.private == False)  # noqa: E712
+    )
+
     try:
-        stmt = select(User)
         users = session.exec(stmt).all()
     except Exception as e:
         print(e)

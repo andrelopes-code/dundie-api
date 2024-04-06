@@ -10,6 +10,4 @@ main_router.include_router(router=user_router, prefix='/user', tags=['User'])
 
 main_router.include_router(router=auth_router, tags=['Auth'])
 
-main_router.include_router(
-    router=transaction_router, tags=['Transaction']
-)
+main_router.include_router(router=transaction_router, tags=['Transaction'])

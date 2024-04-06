@@ -6,12 +6,14 @@ Create Date: 2024-04-05 11:39:59.580704
 
 """
 
-import sqlmodel
-from sqlalchemy.exc import IntegrityError
-from alembic import op
 from typing import Sequence, Union
-from dundie.models import User
+
+import sqlmodel
+from alembic import op
+from sqlalchemy.exc import IntegrityError
+
 from dundie.config import settings
+from dundie.models import User
 
 # revision identifiers, used by Alembic.
 revision: str = '760d6dfdefe7'
@@ -29,7 +31,7 @@ def upgrade() -> None:
         email="admin@admin",
         dept="management",
         password=settings.security.ADMIN_PASS,
-        currency="USD"
+        currency="USD",
     )
 
     pdm = User(
@@ -38,7 +40,7 @@ def upgrade() -> None:
         email="pointdeliveryman@system",
         dept="management",
         password=settings.security.DELIVERY_PASS,
-        currency="USD"
+        currency="USD",
     )
 
     try:

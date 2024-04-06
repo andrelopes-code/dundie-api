@@ -46,7 +46,7 @@ class Balance(SQLModel, table=True):
         primary_key=True,
         unique=True,
     )
-    value: int = Field(nullable=False, ge=0)
+    value: int = Field(nullable=False, ge=0, index=True)
     updated_at: datetime = Field(
         default_factory=get_utcnow,
         nullable=False,

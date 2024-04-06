@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from dundie.config import settings
 from dundie.db import engine
-from dundie.models import Balance, User, Transaction
+from dundie.models import Balance, Transaction, User
 from dundie.utils.utils import get_username
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
@@ -22,7 +22,7 @@ def shell():
         'session': Session(engine),
         'User': User,
         'Balance': Balance,
-        'Transaction': Transaction
+        'Transaction': Transaction,
     }
     typer.echo(f'Auto imports: {list(_vars.keys())}')
     try:
@@ -74,7 +74,7 @@ def create_user(
             'username': username or get_username(name),
             'currency': currency,
             'is_active': active,
-            'private': private
+            'private': private,
         }
 
         user = User.model_validate(data)

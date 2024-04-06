@@ -1,7 +1,9 @@
-from sqlmodel import Session
-from time import time
-from dundie.models import User, Balance
 from random import randint
+from time import time
+
+from sqlmodel import Session
+
+from dundie.models import Balance, User
 
 
 def create_test_users(session: Session):
@@ -14,7 +16,7 @@ def create_test_users(session: Session):
             'password': 'Dav1dPass!',
             'dept': 'Finance',
             'currency': 'USD',
-            'username': 'david_1234'
+            'username': 'david_1234',
         },
         {
             'name': 'Emily',
@@ -22,7 +24,7 @@ def create_test_users(session: Session):
             'password': 'EmiLyp@ss',
             'dept': 'HR',
             'currency': 'USD',
-            'username': 'emily_5678'
+            'username': 'emily_5678',
         },
         {
             'name': 'Frank',
@@ -30,7 +32,7 @@ def create_test_users(session: Session):
             'password': 'FrankPass123',
             'dept': 'IT',
             'currency': 'USD',
-            'username': 'frank_9012'
+            'username': 'frank_9012',
         },
         {
             'name': 'Grace',
@@ -38,7 +40,7 @@ def create_test_users(session: Session):
             'password': 'GracePass456',
             'dept': 'Marketing',
             'currency': 'USD',
-            'username': 'grace_3456'
+            'username': 'grace_3456',
         },
         {
             'name': 'Henry',
@@ -46,7 +48,7 @@ def create_test_users(session: Session):
             'password': 'H3nryP@ss!',
             'dept': 'Sales',
             'currency': 'USD',
-            'username': 'henry_7890'
+            'username': 'henry_7890',
         },
         {
             'name': 'Isabel',
@@ -54,7 +56,7 @@ def create_test_users(session: Session):
             'password': 'Is@b3lP@ss',
             'dept': 'Operations',
             'currency': 'USD',
-            'username': 'isabel_2345'
+            'username': 'isabel_2345',
         },
         {
             'name': 'Jack',
@@ -62,7 +64,7 @@ def create_test_users(session: Session):
             'password': 'J@ckP@ss123',
             'dept': 'Finance',
             'currency': 'USD',
-            'username': 'jack_6789'
+            'username': 'jack_6789',
         },
         {
             'name': 'Kate',
@@ -70,7 +72,7 @@ def create_test_users(session: Session):
             'password': 'K@teP@ssword',
             'dept': 'HR',
             'currency': 'USD',
-            'username': 'kate_0123'
+            'username': 'kate_0123',
         },
         {
             'name': 'Liam',
@@ -78,7 +80,7 @@ def create_test_users(session: Session):
             'password': 'Li@mP@ssword',
             'dept': 'IT',
             'currency': 'USD',
-            'username': 'liam_4567'
+            'username': 'liam_4567',
         },
         {
             'name': 'Mia',
@@ -86,7 +88,7 @@ def create_test_users(session: Session):
             'password': 'Mi@P@ssword',
             'dept': 'Marketing',
             'currency': 'USD',
-            'username': 'mia_8901'
+            'username': 'mia_8901',
         },
         {
             'name': 'Nathan',
@@ -94,7 +96,7 @@ def create_test_users(session: Session):
             'password': 'N@thanP@ss',
             'dept': 'Sales',
             'currency': 'USD',
-            'username': 'nathan_2345'
+            'username': 'nathan_2345',
         },
         {
             'name': 'Olivia',
@@ -102,7 +104,7 @@ def create_test_users(session: Session):
             'password': 'Olivi@P@ss',
             'dept': 'Operations',
             'currency': 'USD',
-            'username': 'olivia_6789'
+            'username': 'olivia_6789',
         },
         {
             'name': 'Patrick',
@@ -110,7 +112,7 @@ def create_test_users(session: Session):
             'password': 'P@trickP@ssword',
             'dept': 'Finance',
             'currency': 'USD',
-            'username': 'patrick_0123'
+            'username': 'patrick_0123',
         },
         {
             'name': 'Quinn',
@@ -118,7 +120,7 @@ def create_test_users(session: Session):
             'password': 'QuinnP@ssword',
             'dept': 'HR',
             'currency': 'USD',
-            'username': 'quinn_4567'
+            'username': 'quinn_4567',
         },
         {
             'name': 'Rachel',
@@ -126,7 +128,7 @@ def create_test_users(session: Session):
             'password': 'R@chelP@ss',
             'dept': 'IT',
             'currency': 'USD',
-            'username': 'rachel_8901'
+            'username': 'rachel_8901',
         },
         {
             'name': 'Samuel',
@@ -134,7 +136,7 @@ def create_test_users(session: Session):
             'password': 'S@muelP@ss',
             'dept': 'Marketing',
             'currency': 'USD',
-            'username': 'samuel_2345'
+            'username': 'samuel_2345',
         },
         {
             'name': 'Taylor',
@@ -142,7 +144,7 @@ def create_test_users(session: Session):
             'password': 'T@ylorP@ss',
             'dept': 'Sales',
             'currency': 'USD',
-            'username': 'taylor_6789'
+            'username': 'taylor_6789',
         },
         {
             'name': 'Uma',
@@ -150,7 +152,7 @@ def create_test_users(session: Session):
             'password': 'Um@P@ss',
             'dept': 'Operations',
             'currency': 'USD',
-            'username': 'uma_0123'
+            'username': 'uma_0123',
         },
         {
             'name': 'Victor',
@@ -158,7 +160,7 @@ def create_test_users(session: Session):
             'password': 'Vict0rP@ss',
             'dept': 'Finance',
             'currency': 'USD',
-            'username': 'victor_4567'
+            'username': 'victor_4567',
         },
         {
             'name': 'Wendy',
@@ -166,7 +168,7 @@ def create_test_users(session: Session):
             'password': 'WendyP@ssword',
             'dept': 'HR',
             'currency': 'USD',
-            'username': 'wendy_8901'
+            'username': 'wendy_8901',
         },
         {
             'name': 'Xavier',
@@ -174,7 +176,7 @@ def create_test_users(session: Session):
             'password': 'X@vierP@ss',
             'dept': 'IT',
             'currency': 'USD',
-            'username': 'xavier_2345'
+            'username': 'xavier_2345',
         },
         {
             'name': 'Yara',
@@ -182,7 +184,7 @@ def create_test_users(session: Session):
             'password': 'Y@raP@ss',
             'dept': 'Marketing',
             'currency': 'USD',
-            'username': 'yara_6789'
+            'username': 'yara_6789',
         },
         {
             'name': 'Zach',
@@ -190,7 +192,7 @@ def create_test_users(session: Session):
             'password': 'Z@chP@ss',
             'dept': 'Sales',
             'currency': 'USD',
-            'username': 'zach_0123'
+            'username': 'zach_0123',
         },
         {
             'name': 'Albert',
@@ -198,7 +200,7 @@ def create_test_users(session: Session):
             'password': 'Alb3rtP@ss',
             'dept': 'Operations',
             'currency': 'USD',
-            'username': 'albert_4567'
+            'username': 'albert_4567',
         },
         {
             'name': 'Beth',
@@ -206,7 +208,7 @@ def create_test_users(session: Session):
             'password': 'B3thP@ss',
             'dept': 'Finance',
             'currency': 'USD',
-            'username': 'beth_8901'
+            'username': 'beth_8901',
         },
         {
             'name': 'Carl',
@@ -214,7 +216,7 @@ def create_test_users(session: Session):
             'password': 'C@rlP@ssword',
             'dept': 'HR',
             'currency': 'USD',
-            'username': 'carl_2345'
+            'username': 'carl_2345',
         },
         {
             'name': 'Diana',
@@ -222,7 +224,7 @@ def create_test_users(session: Session):
             'password': 'D@naP@ss',
             'dept': 'IT',
             'currency': 'USD',
-            'username': 'diana_6789'
+            'username': 'diana_6789',
         },
         {
             'name': 'Ella',
@@ -230,7 +232,7 @@ def create_test_users(session: Session):
             'password': 'Ell@P@ss',
             'dept': 'Marketing',
             'currency': 'USD',
-            'username': 'ella_0123'
+            'username': 'ella_0123',
         },
         {
             'name': 'Felix',
@@ -238,7 +240,7 @@ def create_test_users(session: Session):
             'password': 'FelixP@ss',
             'dept': 'Sales',
             'currency': 'USD',
-            'username': 'felix_4567'
+            'username': 'felix_4567',
         },
         {
             'name': 'Gina',
@@ -246,8 +248,8 @@ def create_test_users(session: Session):
             'password': 'Gin@P@ss',
             'dept': 'Operations',
             'currency': 'USD',
-            'username': 'gina_8901'
-        }
+            'username': 'gina_8901',
+        },
     ]
 
     for user in users:

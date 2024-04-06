@@ -1,8 +1,8 @@
+import time
 import unicodedata
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 from functools import wraps
-import time
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from dundie.models import User
@@ -60,4 +60,5 @@ def timer(func):
         fim = time.time()
         print(f"\033[36mTempo de execução: {fim - inicio}\033[m")
         return resultado
+
     return wrapper

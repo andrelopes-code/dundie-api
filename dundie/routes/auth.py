@@ -1,6 +1,6 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from dundie.auth.functions import (
@@ -10,7 +10,7 @@ from dundie.auth.functions import (
     get_user,
     validate_token,
 )
-from dundie.auth.models import RefreshToken, Token
+from dundie.auth.models import Token
 from dundie.config import settings
 from dundie.models.user import User
 from dundie.utils.status import exp401
@@ -23,6 +23,7 @@ router = APIRouter()
 
 @router.post('/token', response_model=Token)
 async def login_for_access_token(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """Generate access and refresh tokens for authentication."""
@@ -44,18 +45,25 @@ async def login_for_access_token(
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        expires=(datetime.now(timezone.utc) + refresh_token_expires),
+        httponly=True,
+        samesite='strict'
+    )
+
     return {
         'access_token': access_token,
-        'refresh_token': refresh_token,
         'token_type': 'bearer',
     }
 
 
 @router.post('/refresh_token', response_model=Token)
-async def refresh_token(form_data: RefreshToken):
+async def refresh_token(request: Request, response: Response):
     """Obtain a new access token using a refresh token."""
 
-    user = await validate_token(token=form_data.refresh_token)
+    user = await validate_token(token=request.cookies.get('refresh_token'))
 
     # Generating an access token for the user session with specific user data
     # and setting its expiration time.
@@ -72,8 +80,15 @@ async def refresh_token(form_data: RefreshToken):
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        expires=(datetime.now(timezone.utc) + refresh_token_expires),
+        httponly=True,
+        samesite='strict'
+    )
+
     return {
         'access_token': access_token,
-        'refresh_token': refresh_token,
         'token_type': 'bearer',
     }

@@ -1,7 +1,8 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from rich import print as bprint
 
 from dundie.auth.functions import (
     authenticate_user,
@@ -48,22 +49,28 @@ async def login_for_access_token(
     response.set_cookie(
         key='refresh_token',
         value=refresh_token,
-        expires=(datetime.now(timezone.utc) + refresh_token_expires),
+        expires=datetime.now(timezone.utc) + refresh_token_expires,
         httponly=True,
-        samesite='strict'
     )
 
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer',
-    }
+    response.headers.append("Access-Control-Allow-Credentials", "true")
+    response.headers.append("Access-Control-Allow-Methods", "*")
+    response.headers.append("Access-Control-Allow-Origins", "*")
+
+    return Token(access_token=access_token, token_type="Bearer")
 
 
 @router.post('/refresh_token', response_model=Token)
 async def refresh_token(request: Request, response: Response):
     """Obtain a new access token using a refresh token."""
 
-    user = await validate_token(token=request.cookies.get('refresh_token'))
+    bprint(request.cookies)
+
+    token = request.cookies.get('refresh_token')
+    if not token:
+        raise HTTPException(403, 'No refresh token')
+
+    user = await validate_token(token=token)
 
     # Generating an access token for the user session with specific user data
     # and setting its expiration time.
@@ -83,12 +90,11 @@ async def refresh_token(request: Request, response: Response):
     response.set_cookie(
         key='refresh_token',
         value=refresh_token,
-        expires=(datetime.now(timezone.utc) + refresh_token_expires),
+        expires=datetime.now(timezone.utc) + refresh_token_expires,
         httponly=True,
-        samesite='strict'
     )
 
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer',
-    }
+    response.headers.append("Access-Control-Allow-Credentials", "true")
+    response.headers.append("Access-Control-Allow-Methods", "*")
+
+    return Token(access_token=access_token, token_type="Bearer")

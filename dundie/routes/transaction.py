@@ -6,8 +6,11 @@ from sqlmodel import Session, select
 from dundie.auth.functions import AuthenticatedUser, get_user
 from dundie.controllers.transaction import check_and_transfer_points
 from dundie.db import ActiveSession
-from dundie.models import Balance, User
-from dundie.serializers.transaction import RankingResponse
+from dundie.models import Balance, Transaction, User
+from dundie.serializers.transaction import (
+    RankingResponse,
+    RecentTransactionsResponse,
+)
 
 router = APIRouter()
 
@@ -49,7 +52,7 @@ async def transfer_points_to_another_user(
 @router.get(
     '/ranking',
     summary='get the points ranking',
-    dependencies=[],
+    dependencies=[AuthenticatedUser],
     response_model=List[RankingResponse],
 )
 async def get_points_ranking(*, session: Session = ActiveSession):
@@ -71,5 +74,29 @@ async def get_points_ranking(*, session: Session = ActiveSession):
 
     for rank_idx, user in enumerate(result):
         ranking[rank_idx].update({'points': user.balance})
-
     return ranking
+
+
+@router.get(
+    '/transaction/recent',
+    response_model=List[RecentTransactionsResponse],
+    dependencies=[AuthenticatedUser],
+)
+async def get_recent_transactions(session: Session = ActiveSession):
+
+    stmt = select(Transaction).order_by(Transaction.date.desc()).limit(5)
+    transactions = session.exec(stmt).all()
+
+    trans_dict = [
+        {
+            "from_id": t.from_id,
+            "to_id": t.user_id,
+            "from_user": t.from_user,
+            "to_user": t.user,
+            "points": t.value,
+            "date": t.date,
+        }
+        for t in transactions
+    ]
+
+    return trans_dict

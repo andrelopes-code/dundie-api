@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from rich import print as bprint
 
@@ -24,7 +24,6 @@ router = APIRouter()
 
 @router.post('/token', response_model=Token)
 async def login_for_access_token(
-    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """Generate access and refresh tokens for authentication."""
@@ -46,27 +45,18 @@ async def login_for_access_token(
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
-    response.set_cookie(
-        key='refresh_token',
-        value=refresh_token,
-        expires=datetime.now(timezone.utc) + refresh_token_expires,
-        httponly=True,
-    )
-
-    response.headers.append("Access-Control-Allow-Credentials", "true")
-    response.headers.append("Access-Control-Allow-Methods", "*")
-    response.headers.append("Access-Control-Allow-Origins", "*")
-
-    return Token(access_token=access_token, token_type="Bearer")
+    return Token(access_token=access_token,
+                 refresh_token=refresh_token,
+                 token_type="Bearer")
 
 
 @router.post('/refresh_token', response_model=Token)
-async def refresh_token(request: Request, response: Response):
+async def refresh_token(request: Request):
     """Obtain a new access token using a refresh token."""
 
-    bprint(request.cookies)
+    bprint(request.headers)
 
-    token = request.cookies.get('refresh_token')
+    token = request.headers.get('refresh_token')
     if not token:
         raise HTTPException(403, 'No refresh token')
 
@@ -87,14 +77,6 @@ async def refresh_token(request: Request, response: Response):
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
-    response.set_cookie(
-        key='refresh_token',
-        value=refresh_token,
-        expires=datetime.now(timezone.utc) + refresh_token_expires,
-        httponly=True,
-    )
-
-    response.headers.append("Access-Control-Allow-Credentials", "true")
-    response.headers.append("Access-Control-Allow-Methods", "*")
-
-    return Token(access_token=access_token, token_type="Bearer")
+    return Token(access_token=access_token,
+                 refresh_token=refresh_token,
+                 token_type="Bearer")

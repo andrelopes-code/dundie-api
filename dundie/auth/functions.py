@@ -51,7 +51,7 @@ create_refresh_token = partial(create_access_token, scope='refresh_token')
 
 
 def correct_authorization_header_syntax(request: Request):
-    if authorization := request.headers.get('Authorization'):
+    if authorization := request.headers.get('authorization'):
         try:
             splited = authorization.split(' ')
 
@@ -64,7 +64,7 @@ def correct_authorization_header_syntax(request: Request):
                 )
 
         except IndexError:
-            raise exp401('Invalid Authorization header format')
+            raise exp401('Invalid authorization header format')
 
 
 def authenticate_user(
@@ -99,14 +99,14 @@ def get_current_user(
 ) -> User:
     """Get the current user authenticated"""
 
-    # Extract the token from the Authorization header
+    # Extract the token from the authorization header
     # The header is in the format: `Bearer <token>`
     if request:
-        if authorization := request.headers.get('Authorization'):
+        if authorization := request.headers.get('authorization'):
             try:
                 token = authorization.split(' ')[1]
             except IndexError:
-                raise exp401('Invalid Authorization header format')
+                raise exp401('Invalid authorization header format')
 
     # Verify the token and get the username from the payload
     # The token is decoded using the SECRET_KEY and the ALGORITHM specified
@@ -179,7 +179,7 @@ async def get_user_if_change_password_is_allowed(
             if user_last_change.seconds < limit_seconds:
                 raise HTTPException(
                     403,
-                    "Your password has recently been changed, Try again later.",
+                    "Your password has recently been changed, Try again later."
                 )
 
         return target_user

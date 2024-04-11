@@ -15,6 +15,7 @@ from dundie.auth.models import Token
 from dundie.config import settings
 from dundie.models.user import User
 from dundie.utils.status import exp401
+from dundie.auth.functions import validate_token_signature
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.security.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.security.refresh_token_expire_minutes
@@ -56,7 +57,11 @@ async def refresh_token(request: Request):
 
     bprint(request.headers)
 
-    token = request.headers.get('refresh_token')
+    token = (
+        request.cookies.get('refresh_token')
+        or request.headers.get('x-refresh-token')
+    )
+
     if not token:
         raise HTTPException(403, 'No refresh token')
 
@@ -80,3 +85,27 @@ async def refresh_token(request: Request):
     return Token(access_token=access_token,
                  refresh_token=refresh_token,
                  token_type="Bearer")
+
+
+@router.get('/token/validate')
+async def check_is_valid_token(request: Request):
+    """
+    Validate a token by checking its signature and returning a
+    success message if it is valid.
+
+    Args:
+        request (Request): The request object containing the header
+        'x-access-token' to validate token.
+
+    Returns:
+        dict: A dict with a success message if the token is valid.
+
+    """
+
+    token = request.headers.get('x-access-token')
+
+    result = await validate_token_signature(token)
+    if result is True:
+        return {'detail': 'valid token'}
+
+    raise HTTPException(401, 'Unauthorized')

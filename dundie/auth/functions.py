@@ -223,6 +223,26 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
     return user
 
 
+async def validate_token_signature(token: str | None):
+
+    if token is None:
+        raise exp401('No token sent')
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        if not username:
+            raise exp401('Token does not contain a valid username (sub)')
+
+        return True
+
+    except JWTError:
+        raise exp401('Could not decode token or token is invalid')
+
+    except Exception as e:
+        print(e)
+
+
 AuthenticatedUser: User = Depends(get_current_active_user)
 SuperUser: User = Depends(user_is_superuser)
 CanChangeUserPassword: User = Depends(get_user_if_change_password_is_allowed)

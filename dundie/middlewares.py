@@ -24,7 +24,6 @@ def configure_cors_dev(app: FastAPI):
         CORSMiddleware,
         allow_origins=[
             "http://localhost:8000",
-            "http://localhost:5173",
             "http://localhost:3000",
         ],
         allow_credentials=True,

@@ -66,7 +66,6 @@ async def get_points_ranking(*, session: Session = ActiveSession):
         list: A list of dictionaries containing user information and their
         points ranking.
     """
-
     stmt = select(User).join(Balance).order_by(Balance.value.desc()).limit(10)
     result = session.exec(stmt).all()
 

@@ -88,7 +88,7 @@ def try_to_send_password_reset_email(email: str):
         if not user:
             return
 
-        expire = settings.security.RESET_TOKEN_EXPIRE_MINUTES
+        expire = settings.security.RESET_PASS_TOKEN_EXPIRE_MINUTES
 
         # Generate password reset token with expiry time
         pwd_reset_token = create_access_token(

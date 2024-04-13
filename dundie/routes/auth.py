@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from rich import print as bprint
 
 from dundie.auth.functions import (
     authenticate_user,
@@ -10,12 +9,12 @@ from dundie.auth.functions import (
     create_refresh_token,
     get_user,
     validate_token,
+    validate_token_signature,
 )
 from dundie.auth.models import Token
 from dundie.config import settings
 from dundie.models.user import User
 from dundie.utils.status import exp401
-from dundie.auth.functions import validate_token_signature
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.security.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.security.refresh_token_expire_minutes
@@ -46,20 +45,19 @@ async def login_for_access_token(
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
-    return Token(access_token=access_token,
-                 refresh_token=refresh_token,
-                 token_type="Bearer")
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="Bearer",
+    )
 
 
 @router.post('/refresh_token', response_model=Token)
 async def refresh_token(request: Request):
     """Obtain a new access token using a refresh token."""
 
-    bprint(request.headers)
-
-    token = (
-        request.cookies.get('refresh_token')
-        or request.headers.get('x-refresh-token')
+    token = request.cookies.get('refresh_token') or request.headers.get(
+        'x-refresh-token'
     )
 
     if not token:
@@ -82,9 +80,11 @@ async def refresh_token(request: Request):
         data={'sub': user.username}, expires_delta=refresh_token_expires
     )
 
-    return Token(access_token=access_token,
-                 refresh_token=refresh_token,
-                 token_type="Bearer")
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="Bearer",
+    )
 
 
 @router.get('/token/validate')

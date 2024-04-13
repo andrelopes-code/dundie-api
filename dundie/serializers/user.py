@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
 
 from dundie.security import get_password_hash
-from dundie.utils.utils import get_username
+from dundie.utils.utils import get_username, validate_user_fields
 
 
 class UserResponse(BaseModel):
@@ -139,3 +139,23 @@ class EmailRequest(BaseModel):
             raise HTTPException(400, str(e))
 
         return values
+
+
+class UserProfilePatchRequest(BaseModel):
+    name: str
+    username: str
+    bio: str
+
+    @root_validator(pre=True)
+    def validate_values(values):
+        try:
+            validate_user_fields(values)
+            return values
+
+        except HTTPException as e:
+            raise e
+
+        except Exception:
+            raise HTTPException(
+                400, 'An error occurred while validating the data'
+            )

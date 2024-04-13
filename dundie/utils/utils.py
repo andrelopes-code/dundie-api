@@ -1,12 +1,15 @@
+import re
 import time
 import unicodedata
 from datetime import datetime, timezone
 from functools import wraps
 from typing import TYPE_CHECKING
 
+from fastapi import HTTPException
+
 if TYPE_CHECKING:
     from dundie.models import User
-    from dundie.serializers import UserPatchRequest
+    from dundie.serializers import UserPatchRequest, UserProfilePatchRequest
 
 
 def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:
@@ -16,6 +19,22 @@ def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:
     Args:
         user (User): The user object to be updated.
         patch_data (UserPatchRequest): The patch data containing
+        attributes and their new values.
+    """
+    for atribute, value in patch_data:
+        if value is not None:
+            setattr(user, atribute, value)
+
+
+def apply_user_profile_patch(
+    user: 'User', patch_data: 'UserProfilePatchRequest'
+) -> None:
+    """
+    Updates the user object with the provided patch data.
+
+    Args:
+        user (User): The user object to be updated.
+        patch_data (UserProfilePatchRequest): The patch data containing
         attributes and their new values.
     """
     for atribute, value in patch_data:
@@ -62,3 +81,33 @@ def timer(func):
         return resultado
 
     return wrapper
+
+
+def validate_name(name):
+    name_pattern = re.compile(r'[a-z-A-Z\s]{8,50}$')
+    if not name_pattern.match(name):
+        raise HTTPException(status_code=400, detail="Name is not valid")
+    return
+
+
+def validate_username(username):
+    username_pattern = re.compile(r'[a-z]{3,50}$')
+    if not username_pattern.match(username):
+        raise HTTPException(status_code=400, detail="Username is not valid")
+    return
+
+
+def validate_bio(bio):
+    if len(bio) > 255:
+        raise HTTPException(status_code=400, detail="Bio is too long")
+    return
+
+
+def validate_user_fields(user: dict):
+
+    if name := user.get('name'):
+        validate_name(name)
+    if username := user.get('username'):
+        validate_username(username)
+    if bio := user.get('bio'):
+        validate_bio(bio)

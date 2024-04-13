@@ -11,6 +11,7 @@ from dundie.auth.functions import (
     CanChangeUserPassword,
     SuperUser,
 )
+from dundie.config import settings
 from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
 from dundie.models import User
@@ -27,13 +28,41 @@ from dundie.serializers import (
     EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
+    UserProfilePatchRequest,
     UserRequest,
     UserResponse,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
-from dundie.utils.utils import apply_user_patch
+from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
 
 router = APIRouter(redirect_slashes=False)
+
+
+@router.get(
+    '/profile',
+    summary="Gets the authenticated user profile",
+    response_model=UserResponse,
+)
+def get_user_profile(*, user: User = AuthenticatedUser):
+    return user
+
+
+@router.patch('/profile')
+def patch_user_profile(
+    user_data: UserProfilePatchRequest,
+    *,
+    current_user: User = AuthenticatedUser,
+    session: Session = ActiveSession,
+):
+    apply_user_profile_patch(current_user, user_data)
+    session.add(current_user)
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(500, str(e))
+
+    return {"detail": "profile updated!"}
 
 
 @router.get(
@@ -159,7 +188,10 @@ async def create_user(*, session: Session = ActiveSession, user: UserRequest):
 
     # Checks if there is already a user with that username
     stmt = select(User).where(User.username == user.username)
-    if session.exec(stmt).first():
+    if (
+        session.exec(stmt).first()
+        or user.username in settings.PRIVATE_USERNAMES
+    ):
         raise HTTPException(409, 'Username alredy in use')
 
     # Checks if there is already a user with that email

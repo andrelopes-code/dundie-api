@@ -4,6 +4,7 @@ from .user import (
     EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
+    UserProfilePatchRequest,
     UserRequest,
     UserResponse,
 )
@@ -15,4 +16,5 @@ __all__ = [
     'UserPatchRequest',
     'UserPasswordPatchRequest',
     'EmailRequest',
+    'UserProfilePatchRequest',
 ]

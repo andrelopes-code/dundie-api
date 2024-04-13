@@ -98,7 +98,6 @@ def get_current_user(
     fresh: bool = False,
 ) -> User:
     """Get the current user authenticated"""
-
     # Extract the token from the authorization header
     # The header is in the format: `Bearer <token>`
     if request:
@@ -179,7 +178,7 @@ async def get_user_if_change_password_is_allowed(
             if user_last_change.seconds < limit_seconds:
                 raise HTTPException(
                     403,
-                    "Your password has recently been changed, Try again later."
+                    "Your password has recently been changed, Try again later.",
                 )
 
         return target_user

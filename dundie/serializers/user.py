@@ -9,6 +9,7 @@ from pydantic import BaseModel, root_validator
 
 from dundie.security import get_password_hash
 from dundie.utils.utils import get_username, validate_user_fields
+from datetime import datetime
 
 
 class UserResponse(BaseModel):
@@ -142,6 +143,7 @@ class EmailRequest(BaseModel):
 
 
 class UserProfilePatchRequest(BaseModel):
+    """User profile request serializer for updating a user"""
     name: str
     username: str
     bio: str
@@ -155,7 +157,23 @@ class UserProfilePatchRequest(BaseModel):
         except HTTPException as e:
             raise e
 
-        except Exception:
+        except Exception as e:
+            from rich import print as bp
+            bp("ERROR: ", e)
             raise HTTPException(
                 400, 'An error occurred while validating the data'
             )
+
+
+class UserPrivateProfileResponse(BaseModel):
+    """User response serializer containing basic information about a user."""
+
+    id: int
+    created_at: datetime
+    email: str
+    name: str
+    username: str
+    dept: str
+    currency: str
+    bio: str | None = None
+    avatar: str | None = None

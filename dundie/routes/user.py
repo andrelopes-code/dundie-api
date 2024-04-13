@@ -31,6 +31,7 @@ from dundie.serializers import (
     UserProfilePatchRequest,
     UserRequest,
     UserResponse,
+    UserPrivateProfileResponse,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
@@ -41,23 +42,25 @@ router = APIRouter(redirect_slashes=False)
 @router.get(
     '/profile',
     summary="Gets the authenticated user profile",
-    response_model=UserResponse,
+    response_model=UserPrivateProfileResponse,
 )
-def get_user_profile(*, user: User = AuthenticatedUser):
+async def get_user_profile(*, user: User = AuthenticatedUser):
     return user
 
 
 @router.patch('/profile')
-def patch_user_profile(
+async def patch_user_profile(
     user_data: UserProfilePatchRequest,
     *,
     current_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
     apply_user_profile_patch(current_user, user_data)
+    print("CURRENT USER: ", current_user)
     session.add(current_user)
     try:
         session.commit()
+        print("DADOS COMITADOS!")
     except Exception as e:
         session.rollback()
         raise HTTPException(500, str(e))

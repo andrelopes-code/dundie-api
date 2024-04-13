@@ -6,9 +6,10 @@ from functools import wraps
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
-from dundie.db import engine
-from dundie.config import settings
 from sqlmodel import Session, select
+
+from dundie.config import settings
+from dundie.db import engine
 
 if TYPE_CHECKING:
     from dundie.models import User
@@ -41,6 +42,7 @@ def apply_user_profile_patch(
         attributes and their new values.
     """
     from rich import print as bp
+
     bp("PATCH DATA: ", patch_data)
     bp("USER: ", user)
     for atribute, value in patch_data:
@@ -100,15 +102,15 @@ def validate_name(name):
 def validate_username(username):
     with Session(engine) as session:
         from dundie.models import User
+
         stmt = select(User).where(User.username == username)
         if (
             session.exec(stmt).first()
             or username in settings.PRIVATE_USERNAMES
         ):
             raise HTTPException(
-                status_code=409,
-                detail="Username already exists"
-                )
+                status_code=409, detail="Username already exists"
+            )
 
     username_pattern = re.compile(r'[a-z]{3,50}$')
     if not username_pattern.match(username):

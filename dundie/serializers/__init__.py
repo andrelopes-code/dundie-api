@@ -4,10 +4,10 @@ from .user import (
     EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
+    UserPrivateProfileResponse,
     UserProfilePatchRequest,
     UserRequest,
     UserResponse,
-    UserPrivateProfileResponse,
 )
 
 __all__ = [

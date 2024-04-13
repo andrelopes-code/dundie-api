@@ -16,7 +16,8 @@ from dundie.utils.status import exp401
 
 SECRET_KEY = settings.security.secret_key
 ALGORITHM = settings.security.algorithm
-
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.security.access_token_expire_minutes
+REFRESH_TOKEN_EXPIRE_MINUTES = settings.security.refresh_token_expire_minutes
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
@@ -45,6 +46,25 @@ def create_access_token(
     )
 
     return encoded_jwt
+
+
+def create_both_tokens(
+    user: User,
+):
+    # Creates an access token for the authenticated user
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={'sub': user.username, 'fresh': False},
+        expires_delta=access_token_expires,
+    )
+
+    # Creates a refresh token for the authenticated user
+    refresh_token_expires = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token = create_refresh_token(
+        data={'sub': user.username}, expires_delta=refresh_token_expires
+    )
+
+    return access_token, refresh_token
 
 
 create_refresh_token = partial(create_access_token, scope='refresh_token')
@@ -178,7 +198,7 @@ async def get_user_if_change_password_is_allowed(
             if user_last_change.seconds < limit_seconds:
                 raise HTTPException(
                     403,
-                    "Your password has recently been changed, Try again later.",
+                    "Your password has recently been changed, Try again later",
                 )
 
         return target_user

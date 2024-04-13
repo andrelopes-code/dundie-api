@@ -28,10 +28,10 @@ from dundie.serializers import (
     EmailRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
+    UserPrivateProfileResponse,
     UserProfilePatchRequest,
     UserRequest,
     UserResponse,
-    UserPrivateProfileResponse,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
@@ -55,15 +55,21 @@ async def patch_user_profile(
     current_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
+    """Update authenticated user profile data"""
+
+    old_username = current_user.username
+
     apply_user_profile_patch(current_user, user_data)
-    print("CURRENT USER: ", current_user)
+
     session.add(current_user)
     try:
         session.commit()
-        print("DADOS COMITADOS!")
     except Exception as e:
         session.rollback()
         raise HTTPException(500, str(e))
+
+    if user_data.username != old_username:
+        ...
 
     return {"detail": "profile updated!"}
 

@@ -184,6 +184,9 @@ class UserPrivateProfileResponse(BaseModel):
     currency: str
     bio: str | None = None
     avatar: str | None = None
+    github: str | None = None
+    linkedin: str | None = None
+    instagram: str | None = None
 
 
 class UserLinksPatchRequest(BaseModel):

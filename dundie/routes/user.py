@@ -51,7 +51,17 @@ async def patch_user_profile_links(
     current_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
-    ...
+
+    apply_user_profile_patch(current_user, user_data)
+    session.add(current_user)
+
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(500, str(e))
+
+    return {'detail': 'profile updated!'}
 
 
 @router.get(

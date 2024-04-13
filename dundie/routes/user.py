@@ -10,6 +10,7 @@ from dundie.auth.functions import (
     AuthenticatedUser,
     CanChangeUserPassword,
     SuperUser,
+    create_both_tokens,
 )
 from dundie.config import settings
 from dundie.controllers import create_user_and_balance
@@ -32,6 +33,7 @@ from dundie.serializers import (
     UserProfilePatchRequest,
     UserRequest,
     UserResponse,
+    UserLinksPatchRequest,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
@@ -39,17 +41,36 @@ from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
 router = APIRouter(redirect_slashes=False)
 
 
+@router.patch(
+    '/profile/links',
+    summary="Updates the authenticated user profile links"
+)
+async def patch_user_profile_links(
+    user_data: UserLinksPatchRequest,
+    *,
+    current_user: User = AuthenticatedUser,
+    session: Session = ActiveSession,
+):
+    ...
+
+
 @router.get(
     '/profile',
     summary="Gets the authenticated user profile",
     response_model=UserPrivateProfileResponse,
 )
-async def get_user_profile(*, user: User = AuthenticatedUser):
+async def get_user_profile_data(
+    *,
+    user: User = AuthenticatedUser
+):
     return user
 
 
-@router.patch('/profile')
-async def patch_user_profile(
+@router.patch(
+    '/profile',
+    summary="Updates the authenticated user profile data",
+    )
+async def patch_user_profile_data(
     user_data: UserProfilePatchRequest,
     *,
     current_user: User = AuthenticatedUser,
@@ -69,7 +90,15 @@ async def patch_user_profile(
         raise HTTPException(500, str(e))
 
     if user_data.username != old_username:
-        ...
+        session.refresh(current_user)
+        # Generating both access and refresh tokens for the user session
+        access_token, refresh_token = create_both_tokens(current_user)
+        return {
+            "detail": "profile updated!",
+            "refresh": True,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }
 
     return {"detail": "profile updated!"}
 
@@ -81,7 +110,11 @@ async def patch_user_profile(
     dependencies=[AuthenticatedUser],
     response_model=List[UserResponse],
 )
-async def list_users(request: Request, *, session: Session = ActiveSession):
+async def list_all_users_in_db(
+    request: Request,
+    *,
+    session: Session = ActiveSession
+):
     """
     This function handles the GET request to retrieve a list of all users
     registered in the system. It requires authentication for access.
@@ -170,7 +203,11 @@ async def get_user_by_username(
     dependencies=[SuperUser],
     response_model=UserResponse,
 )
-async def create_user(*, session: Session = ActiveSession, user: UserRequest):
+async def create_new_user_in_db(
+    *,
+    session: Session = ActiveSession,
+    user: UserRequest
+):
     """
     This function handles the POST request to create a new user. Access is
     restricted to super users only. It validates the input data and ensures

@@ -8,6 +8,7 @@ from .user import (
     UserProfilePatchRequest,
     UserRequest,
     UserResponse,
+    UserLinksPatchRequest,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     'EmailRequest',
     'UserProfilePatchRequest',
     'UserPrivateProfileResponse',
+    'UserLinksPatchRequest',
 ]

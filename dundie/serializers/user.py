@@ -10,7 +10,11 @@ from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
 
 from dundie.security import get_password_hash
-from dundie.utils.utils import get_username, validate_user_fields
+from dundie.utils.utils import (
+    get_username,
+    validate_user_fields,
+    validate_user_links,
+)
 
 
 class UserResponse(BaseModel):
@@ -180,3 +184,25 @@ class UserPrivateProfileResponse(BaseModel):
     currency: str
     bio: str | None = None
     avatar: str | None = None
+
+
+class UserLinksPatchRequest(BaseModel):
+    """User links request serializer for updating a user"""
+
+    github: str
+    linkedin: str
+    instagram: str
+
+    @root_validator(pre=True)
+    def validate_links(values):
+        try:
+            validate_user_links(values)
+            return values
+
+        except HTTPException as e:
+            raise e
+
+        except Exception:
+            raise HTTPException(
+                400, 'An error occurred while validating the links'
+            )

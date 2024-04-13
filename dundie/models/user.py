@@ -23,11 +23,14 @@ class User(SQLModel, table=True):
     password: HashedPassword = Field(nullable=False)
     name: str = Field(max_length=255, nullable=False)
     dept: str = Field(max_length=255, nullable=False)
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
+    instagram: Optional[str] = None
     currency: str = Field(nullable=False)
     created_at: datetime = Field(default_factory=get_utcnow, nullable=False)
     is_active: bool = Field(default=True, nullable=False)
     private: bool = Field(default=False, nullable=False)
-    last_password_change: datetime | None = Field(default=None)
+    last_password_change: Optional[datetime] = Field(default=None)
 
     # Populates a `.user` on `Transaction`
     incomes: Optional[list["Transaction"]] = Relationship(

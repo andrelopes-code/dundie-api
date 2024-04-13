@@ -51,6 +51,7 @@ def create_access_token(
 def create_both_tokens(
     user: User,
 ):
+    """Create both access and refresh tokens for the user session"""
     # Creates an access token for the authenticated user
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(

@@ -41,13 +41,8 @@ def apply_user_profile_patch(
         patch_data (UserProfilePatchRequest): The patch data containing
         attributes and their new values.
     """
-    from rich import print as bp
-
-    bp("PATCH DATA: ", patch_data)
-    bp("USER: ", user)
     for atribute, value in patch_data:
         if value is not None and value != '':
-            bp(f"ATRIBUTO: {atribute}, VALOR: {value}")
             setattr(user, atribute, value)
 
 
@@ -126,9 +121,24 @@ def validate_bio(bio):
 
 def validate_user_fields(user: dict):
     # if data is "" bypass the validation
-    if (name := user.get('name')) != "":
+    if (name := user.get('name')):
         validate_name(name)
-    if (username := user.get('username')) != "":
+    if (username := user.get('username')):
         validate_username(username)
-    if (bio := user.get('bio')) != "":
+    if (bio := user.get('bio')):
         validate_bio(bio)
+
+
+def validate_user_links(links: dict):
+
+    if github := links.get('github'):
+        if not github.startswith('https://github.com/'):
+            raise HTTPException(400, 'Invalid github link')
+    if linkedin := links.get('linkedin'):
+        if not linkedin.startswith('https://www.linkedin.com/in/'):
+            raise HTTPException(400, 'Invalid linkedin link')
+    if instagram := links.get('instagram'):
+        if not instagram.startswith('https://www.instagram.com/'):
+            raise HTTPException(400, 'Invalid instagram link')
+
+    return links

@@ -19,7 +19,6 @@ def configure_cors(app: FastAPI):
 
 
 def configure_cors_dev(app: FastAPI):
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[

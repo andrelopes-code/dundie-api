@@ -36,13 +36,17 @@ from dundie.serializers import (
     UserLinksPatchRequest,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
-from dundie.utils.utils import apply_user_patch, apply_user_profile_patch
+from dundie.utils.utils import (
+    apply_user_patch,
+    apply_user_profile_patch,
+    apply_user_links_patch,
+)
 
 router = APIRouter(redirect_slashes=False)
 
 
 @router.patch(
-    '/profile/links',
+    '/links',
     summary="Updates the authenticated user profile links"
 )
 async def patch_user_profile_links(
@@ -52,7 +56,7 @@ async def patch_user_profile_links(
     session: Session = ActiveSession,
 ):
 
-    apply_user_profile_patch(current_user, user_data)
+    apply_user_links_patch(current_user, user_data)
     session.add(current_user)
 
     try:

@@ -1,8 +1,8 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import Session, select
 from sqlalchemy import or_
+from sqlmodel import Session, select
 
 from dundie.auth.functions import AuthenticatedUser, get_user
 from dundie.controllers.transaction import check_and_transfer_points
@@ -85,10 +85,14 @@ async def get_points_ranking(*, session: Session = ActiveSession):
     dependencies=[AuthenticatedUser],
 )
 async def get_recent_transactions(session: Session = ActiveSession):
+    """
+    A function that returns the 5 most recent transactions in the database
+    """
 
     stmt = select(Transaction).order_by(Transaction.date.desc()).limit(5)
     transactions = session.exec(stmt).all()
 
+    # ! I know this is not the best way to do this
     trans_dict = [
         {
             "from_id": t.from_id,
@@ -106,21 +110,38 @@ async def get_recent_transactions(session: Session = ActiveSession):
 
 @router.get(
     '/transaction/list',
+    response_model=List[UserTransactionsResponse],
 )
 async def get_user_transactions(
+    username: str = None,
     *,
     user: User = AuthenticatedUser,
     session: Session = ActiveSession,
-) -> List[UserTransactionsResponse]:
-    """Lists all user transactions"""
+):
+    """
+    A function that returns all the authenticated user transactions if no
+    username is passed. If a username is passed, it returns all the
+    transactions of the user with the specified username. The transactions
+    are sorted by date in descending order.
+    """
     # TODO: add pagination to this endpoint to avoid loading all data
 
-    stmt = select(Transaction).where(or_(
-        Transaction.user_id == user.id,
-        Transaction.from_id == user.id)
-    ).order_by(Transaction.date.desc())
+    # Defines the user ID to be used in the query
+    if username:
+        uid = get_user(username=username, session=session).id
+    else:
+        uid = user.id
+
+    # Selects the transactions the user is involved in
+    stmt = (
+        select(Transaction)
+        .where(or_(Transaction.user_id == uid, Transaction.from_id == uid))
+        .order_by(Transaction.date.desc())
+    )
     transactions = session.exec(stmt).all()
 
+    # ! I know this is not the best way to do this
+    # TODO: refactor this
     trans_dict = [
         {
             "id": t.id,

@@ -30,9 +30,7 @@ def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:
             setattr(user, atribute, value)
 
 
-def apply_user_profile_patch(
-    user: 'User', patch_data
-) -> None:
+def apply_user_profile_patch(user: 'User', patch_data) -> None:
     """
     Updates the user object with the provided patch data.
 
@@ -46,9 +44,7 @@ def apply_user_profile_patch(
             setattr(user, atribute, value)
 
 
-def apply_user_links_patch(
-    user: 'User', patch_data
-) -> None:
+def apply_user_links_patch(user: 'User', patch_data) -> None:
     """
     Updates the user object with the provided patch data.
 
@@ -137,11 +133,11 @@ def validate_bio(bio):
 
 def validate_user_fields(user: dict):
     # if data is "" bypass the validation
-    if (name := user.get('name')):
+    if name := user.get('name'):
         validate_name(name)
-    if (username := user.get('username')):
+    if username := user.get('username'):
         validate_username(username)
-    if (bio := user.get('bio')):
+    if bio := user.get('bio'):
         validate_bio(bio)
 
 
@@ -152,29 +148,32 @@ def validate_user_links(links: dict):
     instagram = links.get('instagram')
 
     if github:
-        if not github.startswith((
-            'https://github.com/',
-            'github.com/',
-            'www.github.com/',
-            'https://www.github.com'
+        if not github.startswith(
+            (
+                'https://github.com/',
+                'github.com/',
+                'www.github.com/',
+                'https://www.github.com',
             )
         ):
             raise HTTPException(400, 'Invalid github link')
     if linkedin:
-        if not linkedin.startswith((
-            'https://linkedin.com/in/',
-            'linkedin.com/in/',
-            'www.linkedin.com/in/',
-            'https://www.linkedin.com/in/'
+        if not linkedin.startswith(
+            (
+                'https://linkedin.com/in/',
+                'linkedin.com/in/',
+                'www.linkedin.com/in/',
+                'https://www.linkedin.com/in/',
             )
         ):
             raise HTTPException(400, 'Invalid LinkedIn link')
     if instagram:
-        if not instagram.startswith((
-            'https://instagram.com/',
-            'instagram.com/',
-            'www.instagram.com/',
-            'https://www.instagram.com/'
+        if not instagram.startswith(
+            (
+                'https://instagram.com/',
+                'instagram.com/',
+                'www.instagram.com/',
+                'https://www.instagram.com/',
             )
         ):
             raise HTTPException(400, 'Invalid Instagram link')

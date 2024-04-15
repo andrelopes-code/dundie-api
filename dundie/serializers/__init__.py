@@ -2,13 +2,14 @@ from pydantic import BaseModel
 
 from .user import (
     EmailRequest,
+    UserLinksPatchRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
     UserPrivateProfileResponse,
     UserProfilePatchRequest,
+    UserPublicProfileResponse,
     UserRequest,
     UserResponse,
-    UserLinksPatchRequest,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     'UserProfilePatchRequest',
     'UserPrivateProfileResponse',
     'UserLinksPatchRequest',
+    'UserPublicProfileResponse',
 ]

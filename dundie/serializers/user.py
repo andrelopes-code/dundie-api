@@ -8,18 +8,17 @@ from email_validator import (
 )
 from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
+from sqlmodel import Session
 
+# ! TEMPORARY SOLUTION
+from dundie.db import engine
+from dundie.models.transaction import Balance
 from dundie.security import get_password_hash
 from dundie.utils.utils import (
     get_username,
     validate_user_fields,
     validate_user_links,
 )
-
-# ! TEMPORARY SOLUTION
-from dundie.db import engine
-from dundie.models.transaction import Balance
-from sqlmodel import Session
 
 
 class UserResponse(BaseModel):
@@ -178,11 +177,35 @@ class UserProfilePatchRequest(BaseModel):
 
 
 class UserPrivateProfileResponse(BaseModel):
-    """User response serializer containing basic information about a user."""
+    """User response serializer containing private information about a user."""
 
     id: int
     created_at: datetime
     email: str
+    name: str
+    username: str
+    dept: str
+    currency: str
+    points: int
+    bio: str | None = None
+    avatar: str | None = None
+    github: str | None = None
+    linkedin: str | None = None
+    instagram: str | None = None
+
+    @root_validator(pre=True)
+    def populate_points(cls, values: dict) -> dict:
+        # ! this is a temporary solution
+        with Session(engine) as session:
+            points = session.get(Balance, values['id']).value
+            values.update({'points': points})
+        return values
+
+
+class UserPublicProfileResponse(BaseModel):
+    """User response serializer containing public information about a user."""
+
+    created_at: datetime
     name: str
     username: str
     dept: str

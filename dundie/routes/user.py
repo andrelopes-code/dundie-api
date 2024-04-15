@@ -11,6 +11,7 @@ from dundie.auth.functions import (
     CanChangeUserPassword,
     SuperUser,
     create_both_tokens,
+    get_user,
 )
 from dundie.config import settings
 from dundie.controllers import create_user_and_balance
@@ -27,36 +28,39 @@ from dundie.routes.descriptions import (
 from dundie.security import verify_password
 from dundie.serializers import (
     EmailRequest,
+    UserLinksPatchRequest,
     UserPasswordPatchRequest,
     UserPatchRequest,
     UserPrivateProfileResponse,
     UserProfilePatchRequest,
+    UserPublicProfileResponse,
     UserRequest,
     UserResponse,
-    UserLinksPatchRequest,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import (
+    apply_user_links_patch,
     apply_user_patch,
     apply_user_profile_patch,
-    apply_user_links_patch,
 )
 
-router = APIRouter(redirect_slashes=False)
+router = APIRouter(redirect_slashes=True)
 
 
-@router.patch(
-    '/links',
-    summary="Updates the authenticated user profile links"
-)
+@router.patch('/links', summary="Updates the authenticated user profile links")
 async def patch_user_profile_links(
-    user_data: UserLinksPatchRequest,
+    user_link_data: UserLinksPatchRequest,
     *,
     current_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
-
-    apply_user_links_patch(current_user, user_data)
+    """
+    This function handles the PATCH request to update the links of the user
+    profile. It checks if the user making the request exists and has the
+    correct credentials. If the user exists and has the correct credentials,
+    it updates the user data accordingly.
+    """
+    apply_user_links_patch(current_user, user_link_data)
     session.add(current_user)
 
     try:
@@ -73,24 +77,55 @@ async def patch_user_profile_links(
     summary="Gets the authenticated user profile",
     response_model=UserPrivateProfileResponse,
 )
-async def get_user_profile_data(
-    *,
-    user: User = AuthenticatedUser
-):
+async def get_private_user_profile_data(*, user: User = AuthenticatedUser):
+    """
+    This function handles the GET request to retrieve the profile data of the
+    authenticated user. It checks if the user making the request exists and
+    has the correct credentials. If the user exists and has the correct
+    credentials, it returns the user data as a UserPrivateProfileResponse
+    object.
+    """
     return user.model_dump()
+
+
+@router.get(
+    '/public/{username}',
+    summary="Gets the authenticated user profile",
+    response_model=UserPublicProfileResponse,
+    dependencies=[AuthenticatedUser],
+)
+async def get_public_user_profile_data(
+    username: str, *, session: Session = ActiveSession
+):
+    """
+    This function handles the GET request to retrieve the profile data of the
+    taget user. It checks if the user making the request exists and has the
+    correct credentials. If the user exists and has the correct credentials,
+    it returns the target user data as a UserPublicProfileResponse object.
+    """
+    target_user = get_user(username=username, session=session)
+    return target_user.model_dump()
 
 
 @router.patch(
     '/profile',
     summary="Updates the authenticated user profile data",
-    )
+)
 async def patch_user_profile_data(
     user_data: UserProfilePatchRequest,
     *,
     current_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
-    """Update authenticated user profile data"""
+    """
+    This function handles the PATCH request to update the profile data of the
+    authenticated user. It checks if the user making the request exists and
+    has the correct credentials. If the user exists and has the correct
+    credentials, it updates the user data accordingly.
+
+    If the username is changed, it also generates new access and refresh tokens
+    for the user session.
+    """
 
     old_username = current_user.username
 
@@ -125,9 +160,7 @@ async def patch_user_profile_data(
     response_model=List[UserResponse],
 )
 async def list_all_users_in_db(
-    request: Request,
-    *,
-    session: Session = ActiveSession
+    request: Request, *, session: Session = ActiveSession
 ):
     """
     This function handles the GET request to retrieve a list of all users
@@ -218,9 +251,7 @@ async def get_user_by_username(
     response_model=UserResponse,
 )
 async def create_new_user_in_db(
-    *,
-    session: Session = ActiveSession,
-    user: UserRequest
+    *, session: Session = ActiveSession, user: UserRequest
 ):
     """
     This function handles the POST request to create a new user. Access is

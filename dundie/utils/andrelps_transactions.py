@@ -19,7 +19,7 @@ def create_target_transactions(session: Session):
         'david',
         'samuel',
         'jack',
-        'taylor'
+        'taylor',
     ]
 
     while count < 30:

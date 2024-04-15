@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import Session, select
+from sqlalchemy import or_
 
 from dundie.auth.functions import AuthenticatedUser, get_user
 from dundie.controllers.transaction import check_and_transfer_points
@@ -10,7 +11,9 @@ from dundie.models import Balance, Transaction, User
 from dundie.serializers.transaction import (
     RankingResponse,
     RecentTransactionsResponse,
+    UserTransactionsResponse,
 )
+
 
 router = APIRouter()
 
@@ -88,6 +91,39 @@ async def get_recent_transactions(session: Session = ActiveSession):
 
     trans_dict = [
         {
+            "from_id": t.from_id,
+            "to_id": t.user_id,
+            "from_user": t.from_user,
+            "to_user": t.user,
+            "points": t.value,
+            "date": t.date,
+        }
+        for t in transactions
+    ]
+
+    return trans_dict
+
+
+@router.get(
+    '/transaction/list',
+)
+async def get_user_transactions(
+    *,
+    user: User = AuthenticatedUser,
+    session: Session = ActiveSession,
+) -> List[UserTransactionsResponse]:
+    """Lists all user transactions"""
+    # TODO: add pagination to this endpoint to avoid loading all data
+
+    stmt = select(Transaction).where(or_(
+        Transaction.user_id == user.id,
+        Transaction.from_id == user.id)
+    ).order_by(Transaction.date.desc())
+    transactions = session.exec(stmt).all()
+
+    trans_dict = [
+        {
+            "id": t.id,
             "from_id": t.from_id,
             "to_id": t.user_id,
             "from_user": t.from_user,

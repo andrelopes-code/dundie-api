@@ -20,3 +20,13 @@ class RecentTransactionsResponse(BaseModel):
     to_user: UserResponse
     points: int
     date: datetime
+
+
+class UserTransactionsResponse(BaseModel):
+    id: int
+    from_id: int
+    to_id: int
+    from_user: UserResponse
+    to_user: UserResponse
+    points: int
+    date: datetime

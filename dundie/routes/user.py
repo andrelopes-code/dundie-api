@@ -77,7 +77,7 @@ async def get_user_profile_data(
     *,
     user: User = AuthenticatedUser
 ):
-    return user
+    return user.model_dump()
 
 
 @router.patch(

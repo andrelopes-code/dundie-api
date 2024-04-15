@@ -16,6 +16,11 @@ from dundie.utils.utils import (
     validate_user_links,
 )
 
+# ! TEMPORARY SOLUTION
+from dundie.db import engine
+from dundie.models.transaction import Balance
+from sqlmodel import Session
+
 
 class UserResponse(BaseModel):
     """User response serializer containing basic information about a user."""
@@ -182,11 +187,20 @@ class UserPrivateProfileResponse(BaseModel):
     username: str
     dept: str
     currency: str
+    points: int
     bio: str | None = None
     avatar: str | None = None
     github: str | None = None
     linkedin: str | None = None
     instagram: str | None = None
+
+    @root_validator(pre=True)
+    def populate_points(cls, values: dict) -> dict:
+        # ! this is a temporary solution
+        with Session(engine) as session:
+            points = session.get(Balance, values['id']).value
+            values.update({'points': points})
+        return values
 
 
 class UserLinksPatchRequest(BaseModel):
@@ -197,7 +211,7 @@ class UserLinksPatchRequest(BaseModel):
     instagram: str
 
     @root_validator(pre=True)
-    def validate_links(values):
+    def validate_links(cls, values):
         try:
             validate_user_links(values)
             return values

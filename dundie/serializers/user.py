@@ -32,6 +32,13 @@ class UserResponse(BaseModel):
     avatar: str | None = None
 
 
+class UsernamesResponse(BaseModel):
+    """User response serializer containing only usernames and names."""
+
+    name: str
+    username: str
+
+
 class UserRequest(BaseModel):
     """User request serializer for creating or updating a user."""
 

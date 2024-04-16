@@ -36,6 +36,7 @@ from dundie.serializers import (
     UserPublicProfileResponse,
     UserRequest,
     UserResponse,
+    UsernamesResponse,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import (
@@ -44,10 +45,14 @@ from dundie.utils.utils import (
     apply_user_profile_patch,
 )
 
+
 router = APIRouter(redirect_slashes=True)
 
 
-@router.patch('/links', summary="Updates the authenticated user profile links")
+@router.patch(
+    '/links',
+    summary="Updates the authenticated user profile links"
+)
 async def patch_user_profile_links(
     user_link_data: UserLinksPatchRequest,
     *,
@@ -77,7 +82,10 @@ async def patch_user_profile_links(
     summary="Gets the authenticated user profile",
     response_model=UserPrivateProfileResponse,
 )
-async def get_private_user_profile_data(*, user: User = AuthenticatedUser):
+async def get_private_user_profile_data(
+    *,
+    user: User = AuthenticatedUser
+):
     """
     This function handles the GET request to retrieve the profile data of the
     authenticated user. It checks if the user making the request exists and
@@ -197,6 +205,28 @@ async def list_all_users_in_db(
     if not users:
         raise HTTPException(204, 'The user list is empty')
 
+    return users
+
+
+@router.get(
+    '/names',  # ROOT '/'
+    summary='List all users',
+    description=LIST_USERS_DESC,
+    dependencies=[],
+    response_model=List[UsernamesResponse],
+)
+async def get_usernames(
+    query: str | None = None,
+    session: Session = ActiveSession,
+):
+    if not query:
+        return []
+    # !
+    stmt = (
+        select(User.username, User.name)
+        .where(User.username.like(f'%{query}%'))
+    ).limit(10)
+    users = session.exec(stmt).all()
     return users
 
 

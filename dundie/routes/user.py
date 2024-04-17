@@ -37,6 +37,7 @@ from dundie.serializers import (
     UserRequest,
     UserResponse,
     UsernamesResponse,
+    UserAvatarPatchRequest,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
 from dundie.utils.utils import (
@@ -51,7 +52,8 @@ router = APIRouter(redirect_slashes=True)
 
 @router.patch(
     '/links',
-    summary="Updates the authenticated user profile links"
+    summary="Updates the authenticated user profile links",
+    tags=['Profile']
 )
 async def patch_user_profile_links(
     user_link_data: UserLinksPatchRequest,
@@ -81,6 +83,7 @@ async def patch_user_profile_links(
     '/profile',
     summary="Gets the authenticated user profile",
     response_model=UserPrivateProfileResponse,
+    tags=['Profile']
 )
 async def get_private_user_profile_data(
     *,
@@ -96,11 +99,42 @@ async def get_private_user_profile_data(
     return user.model_dump()
 
 
+@router.patch(
+    '/profile/avatar',
+    tags=['Profile']
+)
+async def upload_avatar_image_link(
+    *,
+    avatar_image_link: UserAvatarPatchRequest,
+    user: User = AuthenticatedUser,
+    session: Session = ActiveSession
+):
+    """
+    This function handles the PATCH request to update the avatar image link of
+    the authenticated user, it reiceves a link to the image and updates the
+    user's avatar link.
+    """
+    # ? It is a simple solution for the problem
+    user.avatar = avatar_image_link.avatar_url
+    try:
+        session.add(user)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(
+            400,
+            'Something went wrong while updating the avatar link'
+        )
+
+    return {'detail': 'avatar updated!'}
+
+
 @router.get(
     '/public/{username}',
     summary="Gets the authenticated user profile",
     response_model=UserPublicProfileResponse,
     dependencies=[AuthenticatedUser],
+    tags=['Profile']
 )
 async def get_public_user_profile_data(
     username: str, *, session: Session = ActiveSession
@@ -118,6 +152,7 @@ async def get_public_user_profile_data(
 @router.patch(
     '/profile',
     summary="Updates the authenticated user profile data",
+    tags=['Profile']
 )
 async def patch_user_profile_data(
     user_data: UserProfilePatchRequest,

@@ -95,6 +95,7 @@ async def get_recent_transactions(session: Session = ActiveSession):
     # ! I know this is not the best way to do this
     trans_dict = [
         {
+            "id": t.id,
             "from_id": t.from_id,
             "to_id": t.user_id,
             "from_user": t.from_user,

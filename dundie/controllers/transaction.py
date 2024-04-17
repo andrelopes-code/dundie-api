@@ -57,6 +57,9 @@ def check_and_transfer_points(
     session: Session | None = None,
 ):
 
+    if points < 10:
+        raise HTTPException(400, 'Points must be greater than or equal to 10')
+
     # Checks whether the transaction can be carried out
     if from_user and from_user.balance < points and not from_user.superuser:
         raise HTTPException(403, 'Insufficient funds')

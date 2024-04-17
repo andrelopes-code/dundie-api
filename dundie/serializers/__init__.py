@@ -11,6 +11,7 @@ from .user import (
     UserRequest,
     UserResponse,
     UsernamesResponse,
+    UserAvatarPatchRequest,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     'UserLinksPatchRequest',
     'UserPublicProfileResponse',
     'UsernamesResponse',
+    'UserAvatarPatchRequest',
 ]

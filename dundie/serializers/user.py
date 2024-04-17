@@ -39,6 +39,12 @@ class UsernamesResponse(BaseModel):
     username: str
 
 
+class UserAvatarPatchRequest(BaseModel):
+    """User request serializer for updating a user's avatar."""
+
+    avatar_url: str
+
+
 class UserRequest(BaseModel):
     """User request serializer for creating or updating a user."""
 

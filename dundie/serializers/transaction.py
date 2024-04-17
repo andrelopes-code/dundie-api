@@ -14,6 +14,7 @@ class RankingResponse(BaseModel):
 
 
 class RecentTransactionsResponse(BaseModel):
+    id: int
     from_id: int
     to_id: int
     from_user: UserResponse

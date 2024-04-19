@@ -222,7 +222,9 @@ async def get_current_active_user(
 async def user_is_superuser(
     current_user: User = Depends(get_current_user),
 ) -> bool:
-    return current_user.superuser
+    if not current_user.superuser:
+        raise HTTPException(401, 'You are not a Super User!')
+    return current_user
 
 
 async def validate_token(token: str = Depends(oauth2_scheme)) -> User:

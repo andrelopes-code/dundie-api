@@ -1,7 +1,9 @@
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.exceptions import HTTPException
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlmodel import paginate
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -9,51 +11,40 @@ from sqlmodel import Session, select
 from dundie.auth.functions import (
     AuthenticatedUser,
     CanChangeUserPassword,
-    SuperUser,
     create_both_tokens,
     get_user,
 )
-from dundie.config import settings
-from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
 from dundie.models import User
 from dundie.routes.descriptions import (
     CHANGE_USER_PASSWORD_DESC,
-    CREATE_USER_DESC,
     GET_USER_BY_USERNAME_DESC,
     LIST_USERS_DESC,
     PASSWORD_RESET_EMAIL_DESC,
-    PATCH_USER_DATA_DESC,
 )
 from dundie.security import verify_password
 from dundie.serializers import (
     EmailRequest,
+    UserAvatarPatchRequest,
     UserLinksPatchRequest,
+    UsernamesResponse,
     UserPasswordPatchRequest,
-    UserPatchRequest,
     UserPrivateProfileResponse,
     UserProfilePatchRequest,
     UserPublicProfileResponse,
-    UserRequest,
     UserResponse,
-    UsernamesResponse,
-    UserAvatarPatchRequest,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
-from dundie.utils.utils import (
-    apply_user_links_patch,
-    apply_user_patch,
-    apply_user_profile_patch,
-)
+from dundie.utils.utils import apply_user_links_patch, apply_user_profile_patch
+
+router = APIRouter()
 
 
-router = APIRouter(redirect_slashes=True)
-
-
+# * PATCH /user/links ~ Updates the user profile links
 @router.patch(
     '/links',
     summary="Updates the authenticated user profile links",
-    tags=['Profile']
+    tags=['Profile'],
 )
 async def patch_user_profile_links(
     user_link_data: UserLinksPatchRequest,
@@ -79,16 +70,14 @@ async def patch_user_profile_links(
     return {'detail': 'profile updated!'}
 
 
+# * GET /user/profile ~ Gets the authenticated user profile
 @router.get(
     '/profile',
     summary="Gets the authenticated user profile",
     response_model=UserPrivateProfileResponse,
-    tags=['Profile']
+    tags=['Profile'],
 )
-async def get_private_user_profile_data(
-    *,
-    user: User = AuthenticatedUser
-):
+async def get_private_user_profile_data(*, user: User = AuthenticatedUser):
     """
     This function handles the GET request to retrieve the profile data of the
     authenticated user. It checks if the user making the request exists and
@@ -99,15 +88,17 @@ async def get_private_user_profile_data(
     return user.model_dump()
 
 
+# * /user/profile/avatar ~ Updates avatar image link for the authenticated user
 @router.patch(
     '/profile/avatar',
-    tags=['Profile']
+    tags=['Profile'],
+    summary='Uploads a new avatar image link for the authenticated user',
 )
 async def upload_avatar_image_link(
     *,
     avatar_image_link: UserAvatarPatchRequest,
     user: User = AuthenticatedUser,
-    session: Session = ActiveSession
+    session: Session = ActiveSession,
 ):
     """
     This function handles the PATCH request to update the avatar image link of
@@ -122,19 +113,19 @@ async def upload_avatar_image_link(
     except Exception:
         session.rollback()
         raise HTTPException(
-            400,
-            'Something went wrong while updating the avatar link'
+            400, 'Something went wrong while updating the avatar link'
         )
 
     return {'detail': 'avatar updated!'}
 
 
+# * /user/public/{username} ~ Gets public user profile
 @router.get(
     '/public/{username}',
-    summary="Gets the authenticated user profile",
+    summary="Gets public user profile",
     response_model=UserPublicProfileResponse,
     dependencies=[AuthenticatedUser],
-    tags=['Profile']
+    tags=['Profile'],
 )
 async def get_public_user_profile_data(
     username: str, *, session: Session = ActiveSession
@@ -149,10 +140,11 @@ async def get_public_user_profile_data(
     return target_user.model_dump()
 
 
+# * PATCH /user/profile ~ Updates the authenticated user profile
 @router.patch(
     '/profile',
     summary="Updates the authenticated user profile data",
-    tags=['Profile']
+    tags=['Profile'],
 )
 async def patch_user_profile_data(
     user_data: UserProfilePatchRequest,
@@ -195,15 +187,19 @@ async def patch_user_profile_data(
     return {"detail": "profile updated!"}
 
 
+# * GET /user ~ Gets a list of all users
 @router.get(
     '',  # ROOT '/'
     summary='List all users',
     description=LIST_USERS_DESC,
-    dependencies=[AuthenticatedUser],
-    response_model=List[UserResponse],
+    response_model=Page[UserResponse],
 )
 async def list_all_users_in_db(
-    request: Request, *, session: Session = ActiveSession
+    request: Request,
+    *,
+    session: Session = ActiveSession,
+    current_user: User = AuthenticatedUser,
+    params: Params = Depends(),
 ):
     """
     This function handles the GET request to retrieve a list of all users
@@ -233,16 +229,15 @@ async def list_all_users_in_db(
     )
 
     try:
-        users = session.exec(stmt).all()
+        # Paginates the user list response
+        return paginate(query=stmt, params=params, session=session)
     except Exception as e:
         print(e)
 
-    if not users:
-        raise HTTPException(204, 'The user list is empty')
-
-    return users
+    return {'detail': 'failed'}
 
 
+# * GET /user/names ~ Gets a list of all usernames
 @router.get(
     '/names',  # ROOT '/'
     summary='List all users',
@@ -258,13 +253,15 @@ async def get_usernames(
         return []
     # !
     stmt = (
-        select(User.username, User.name)
-        .where(User.username.like(f'%{query}%'))
+        select(User.username, User.name).where(
+            User.username.like(f'%{query}%')
+        )
     ).limit(10)
     users = session.exec(stmt).all()
     return users
 
 
+# * GET /user/{username} ~ Gets a user by username
 @router.get(
     '/{username}',
     summary='Get a user by username',
@@ -280,19 +277,6 @@ async def get_user_by_username(
     It requires authentication for access. Upon successful authentication,
     it queries the database to fetch the user record corresponding to the
     provided username and returns it as a UserResponse object.
-
-    Args:
-        - session (Session, optional): An active session to interact with the
-        database. Defaults to ActiveSession.
-        - username (str): The username of the user to retrieve.
-
-    Returns:
-        UserResponse: An object containing details of the user such as
-        username, email, etc.
-
-    Raises:
-        HTTPException: An HTTP exception with status code 404 is raised if
-        the user corresponding to the provided username is not found.
     """
 
     try:
@@ -303,130 +287,6 @@ async def get_user_by_username(
 
     if not user:
         raise HTTPException(404, 'User not found')
-
-    return user
-
-
-@router.post(
-    '',  # ROOT '/'
-    summary='Creates a new user',
-    description=CREATE_USER_DESC,
-    status_code=201,
-    dependencies=[SuperUser],
-    response_model=UserResponse,
-)
-async def create_new_user_in_db(
-    *, session: Session = ActiveSession, user: UserRequest
-):
-    """
-    This function handles the POST request to create a new user. Access is
-    restricted to super users only. It validates the input data and ensures
-    that the username and email are unique before adding the new user to
-    the database.
-
-    Args:
-        - session (Session, optional): An active session to interact with the
-        database. Defaults to ActiveSession.
-        - user (UserRequest): An object containing the details of the user to
-        be created.
-
-    Returns:
-        UserResponse: An object containing details of the newly created user
-        such as username, email, etc.
-
-    Raises:
-        HTTPException:
-        - An HTTP exception with status code 409 is raised if the provided
-        username or email is already in use.
-        - An HTTP exception with status code 500 is raised if there is an
-        integrity error while committing to the database.
-    """
-
-    # Checks if there is already a user with that username
-    stmt = select(User).where(User.username == user.username)
-    if (
-        session.exec(stmt).first()
-        or user.username in settings.PRIVATE_USERNAMES
-    ):
-        raise HTTPException(409, 'Username alredy in use')
-
-    # Checks if there is already a user with that email
-    stmt = select(User).where(User.email == user.email)
-    if session.exec(stmt).first():
-        raise HTTPException(409, 'Email alredy in use')
-
-    db_user = create_user_and_balance(user_data=user, session=session)
-
-    return db_user
-
-
-@router.patch(
-    '/{username}',
-    summary='Updates partialy the user data',
-    description=PATCH_USER_DATA_DESC,
-    dependencies=[AuthenticatedUser],
-    response_model=UserResponse,
-)
-async def update_bio_and_avatar(
-    *,
-    username: str,
-    session: Session = ActiveSession,
-    patch_data: UserPatchRequest,
-    current_user: User = AuthenticatedUser,
-):
-    """
-    This function handles the PATCH request to update partial data of an
-    already registered user. Authentication is required to access this
-    endpoint. It checks if the user making the request exists and has the
-    necessary permissions to perform the update. If the user is not a super
-    user, they can only update their own data. Super users can update any
-    user's data.
-
-    Args:
-        - username (str): The username of the user whose data needs to be
-        updated.
-        - session (Session, optional): An active session to interact with the
-        database. Defaults to ActiveSession.
-        - patch_data (UserPatchRequest): An object containing the partial data
-        to be updated for the user.
-        - current_user (User): The currently authenticated user. Defaults to
-        AuthenticatedUser.
-
-    Returns:
-        UserResponse: An object containing the updated details of the user
-        such as username, email, etc.
-
-    Raises:
-        HTTPException:
-        - An HTTP exception with status code 404 is raised if the user
-        corresponding to the provided username is not found.
-        - An HTTP exception with status code 403 is raised if the current
-        user does not have permission to update the user data.
-        - An HTTP exception with status code 500 is raised if there is an
-        integrity error while committing to the database.
-    """
-
-    # Checks if the sent user exists
-    stmt = select(User).where(User.username == username)
-    if not (user := session.exec(stmt).first()):
-        raise HTTPException(404, 'User not found')
-
-    # Checks if the current_user id differs from the URL user id
-    # and if the current_user is a superuser
-    if current_user.id != user.id and not current_user.superuser:
-        raise HTTPException(403, 'Permission denied to update this user')
-
-    # Apply updates to the user instance
-    apply_user_patch(user, patch_data)
-
-    try:
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-    except IntegrityError as e:
-        session.rollback()
-        print(e)
-        raise HTTPException(500, 'Database IntegrityError')
 
     return user
 

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from email_validator import (
@@ -24,6 +25,7 @@ from dundie.utils.utils import (
 class UserResponse(BaseModel):
     """User response serializer containing basic information about a user."""
 
+    id: int
     name: str
     username: str
     dept: str
@@ -59,17 +61,7 @@ class UserRequest(BaseModel):
 
     @root_validator(pre=True)
     def get_username_if_not_exist(cls, values: dict) -> dict:
-        """
-        A root validator that gets the username if it does not exist in the
-        user request.
-
-        Args:
-            cls: The class object.
-            values: The dictionary of values.
-
-        Returns:
-            The updated dictionary of values.
-        """
+        """gets the username if it does not exist in theuser request."""
 
         if values.get('username') is None:
             values['username'] = get_username(values['name'])
@@ -78,18 +70,7 @@ class UserRequest(BaseModel):
 
     @root_validator(pre=True)
     def check_email_syntax(cls, values: dict) -> dict:
-        """
-        Validates the syntax of an email address.
-
-        This function is a root validator that is called before any other
-        validators. It checks the syntax of the email address provided in the
-        `values` dictionary. If the email address is not valid, it raises
-        an HTTPException with a status code of 400 and the corresponding
-        error message.
-
-        Raises:
-            HTTPException: If the email address is not valid.
-        """
+        """Validates the syntax of an email address."""
         email = values.get('email')
         try:
             validate_email(email)
@@ -100,6 +81,20 @@ class UserRequest(BaseModel):
         ) as e:
             raise HTTPException(400, str(e))
 
+        return values
+
+    @root_validator(pre=True)
+    def check_passwords_complexity(cls, values):
+        """Checks if passwords complexity is met"""
+
+        regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
+
+        if not re.match(regex, values.get('password')):
+            raise HTTPException(
+                400,
+                'Password must be at least 8 characters long and contain at'
+                + 'least one letter and one number',
+            )
         return values
 
 

@@ -14,7 +14,6 @@ from dundie.serializers.transaction import (
     UserTransactionsResponse,
 )
 
-
 router = APIRouter()
 
 

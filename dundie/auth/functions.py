@@ -35,7 +35,7 @@ def create_access_token(
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=5)
 
     to_encode = data.copy()
     to_encode.update({'exp': expire, 'scope': scope})
@@ -55,14 +55,15 @@ def create_both_tokens(
     # Creates an access token for the authenticated user
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={'sub': user.username, 'fresh': False},
+        data={'sub': user.username, 'dept': user.dept, 'fresh': False},
         expires_delta=access_token_expires,
     )
 
     # Creates a refresh token for the authenticated user
     refresh_token_expires = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
     refresh_token = create_refresh_token(
-        data={'sub': user.username}, expires_delta=refresh_token_expires
+        data={'sub': user.username, 'dept': user.dept},
+        expires_delta=refresh_token_expires,
     )
 
     return access_token, refresh_token
@@ -169,17 +170,20 @@ async def get_user_if_change_password_is_allowed(
         raise HTTPException(404, 'User not found')
 
     try:
-        valid_pwd_reset_token = (
-            get_current_user(token=pwd_reset_token or '') == target_user
-        )
+        if pwd_reset_token:
+            valid_pwd_reset_token = (
+                get_current_user(token=pwd_reset_token or '') == target_user
+            )
+        else:
+            valid_pwd_reset_token = False
     except HTTPException:
-        valid_pwd_reset_token = False
+        # if pwd_reset_token sent is invalid
+        raise HTTPException(403, 'Possibly the token has expired')
 
     try:
         current_user = get_current_user(token='', request=request)
     except HTTPException:
         current_user = False
-
     if any(
         [
             valid_pwd_reset_token,
@@ -187,10 +191,10 @@ async def get_user_if_change_password_is_allowed(
             current_user and current_user.id == target_user.id,
         ]
     ):
+        # ! CHECK FOR PASSWORD CHANGE, NOT FOR PWD RESET
         if (
-            not current_user.superuser
-            and target_user.last_password_change is not None
-        ):
+            current_user and not current_user.superuser
+        ) and target_user.last_password_change is not None:
 
             # Checks if the password has been changed recently
             limit_seconds = settings.security.PWD_RESET_TIME_LIMIT_SECONDS
@@ -256,7 +260,7 @@ async def validate_token_signature(token: str | None):
         if not username:
             raise exp401('Token does not contain a valid username (sub)')
 
-        return True
+        return payload
 
     except JWTError:
         raise exp401('Could not decode token or token is invalid')

@@ -176,9 +176,7 @@ class UserProfilePatchRequest(BaseModel):
             raise e
 
         except Exception as e:
-            from rich import print as bp
-
-            bp("ERROR: ", e)
+            print("ERROR: ", e)
             raise HTTPException(
                 400, 'An error occurred while validating the data'
             )

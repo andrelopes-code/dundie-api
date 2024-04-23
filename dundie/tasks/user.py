@@ -14,7 +14,7 @@ from dundie.templates import env
 
 def _send_email_debug(email: str, message: str):
     sleep(2)
-    with open('mail.log', 'a') as f:
+    with open('mails.log', 'a') as f:
         f.write(
             f'>>> START EMAIL {email} <<<\n{message}\n>>> ENDOF EMAIL <<<\n\n'
         )
@@ -92,7 +92,7 @@ def try_to_send_password_reset_email(email: str):
 
         # Generate password reset token with expiry time
         pwd_reset_token = create_access_token(
-            data={'sub': user.username},
+            data={'sub': user.username, 'dept': user.dept},
             expires_delta=timedelta(minutes=expire),
             scope='pwd_reset',
         )

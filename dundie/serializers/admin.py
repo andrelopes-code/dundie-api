@@ -27,3 +27,23 @@ class UserChangeVisibilityRequest(BaseModel):
     password: str
     disable: bool
     enable: bool
+
+
+class FullUserDataResponse(BaseModel):
+    """User response serializer containing full information about a user."""
+
+    id: int
+    created_at: datetime
+    name: str
+    username: str
+    email: str
+    dept: str
+    avatar: str | None
+    bio: str | None
+    github: str | None
+    linkedin: str | None
+    instagram: str | None
+    is_active: bool
+    private: bool
+    currency: str
+    last_password_change: datetime

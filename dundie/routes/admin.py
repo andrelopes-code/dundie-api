@@ -117,3 +117,26 @@ async def change_user_visibility_by_username(
     session.delete(user)
     session.commit()
     return {'detail': f'user {data.username} deleted!'}
+
+
+@router.get(
+    '/{username}',
+    summary='Get a user by username',
+    dependencies=[SuperUser],
+    response_model=UserResponse,
+)
+async def get_full_user_data_by_username(
+    *, session: Session = ActiveSession, username: str
+):
+    """Returns a full user data by username"""
+
+    try:
+        stmt = select(User).where(User.username == username)
+        user = session.exec(stmt).first()
+    except Exception as e:
+        print(e)
+
+    if not user:
+        raise HTTPException(404, 'User not found')
+
+    return user

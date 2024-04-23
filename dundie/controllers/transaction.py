@@ -66,7 +66,7 @@ def check_and_transfer_points(
 
     # Gets the reiceiving user
     to_user = get_user(username)
-    if not to_user:
+    if not to_user or not to_user.is_active or to_user.private:
         raise HTTPException(404, 'User not found, impossible to transfer')
 
     # If not from_user, use system 'PointsDeliveryMan' user to send points

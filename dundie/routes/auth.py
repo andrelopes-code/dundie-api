@@ -20,9 +20,8 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """Generate access and refresh tokens for authentication."""
-
     user = authenticate_user(get_user, form_data.username, form_data.password)
-    if not user or not isinstance(user, User):
+    if not user or not isinstance(user, User) or not user.is_active:
         raise exp401('Incorrect username or password')
 
     # Generating both access and refresh tokens for the user session
@@ -76,7 +75,7 @@ async def check_is_valid_token(request: Request):
     token = request.headers.get('x-access-token')
 
     result = await validate_token_signature(token)
-    if result is True:
-        return {'detail': 'valid token'}
+    if result.get('sub'):
+        return {'detail': result}
 
     raise HTTPException(401, 'Unauthorized')

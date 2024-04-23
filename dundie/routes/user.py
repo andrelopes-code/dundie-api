@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
@@ -18,7 +19,6 @@ from dundie.db import ActiveSession
 from dundie.models import User
 from dundie.routes.descriptions import (
     CHANGE_USER_PASSWORD_DESC,
-    GET_USER_BY_USERNAME_DESC,
     LIST_USERS_DESC,
     PASSWORD_RESET_EMAIL_DESC,
 )
@@ -161,9 +161,7 @@ async def patch_user_profile_data(
     If the username is changed, it also generates new access and refresh tokens
     for the user session.
     """
-
     old_username = current_user.username
-
     apply_user_profile_patch(current_user, user_data)
 
     session.add(current_user)
@@ -208,19 +206,6 @@ async def list_all_users_in_db(
     user records and returns them as a list of UserResponse objects.
     If query params to 'sort' (sort=asc) are passed, it will do the query
     with the sort method: descending, ascending, etc.
-
-    Args:
-        - request: the Request object.
-        - session (Session, optional): An active session to interact with the
-        database. Defaults to ActiveSession.
-
-    Returns:
-        List[UserResponse]: A list of user objects containing user details
-        such as username, email, etc.
-
-    Raises:
-        HTTPException: An HTTP exception with status code 204 is raised if the
-        user list is empty.
     """
 
     # Query users who are not private or disabled
@@ -239,7 +224,7 @@ async def list_all_users_in_db(
 
 # * GET /user/names ~ Gets a list of all usernames
 @router.get(
-    '/names',  # ROOT '/'
+    '/names',
     summary='List all users',
     description=LIST_USERS_DESC,
     dependencies=[],
@@ -261,36 +246,6 @@ async def get_usernames(
     return users
 
 
-# * GET /user/{username} ~ Gets a user by username
-@router.get(
-    '/{username}',
-    summary='Get a user by username',
-    description=GET_USER_BY_USERNAME_DESC,
-    dependencies=[AuthenticatedUser],
-    response_model=UserResponse,
-)
-async def get_user_by_username(
-    *, session: Session = ActiveSession, username: str
-):
-    """
-    This function handles the GET request to retrieve a user by their username.
-    It requires authentication for access. Upon successful authentication,
-    it queries the database to fetch the user record corresponding to the
-    provided username and returns it as a UserResponse object.
-    """
-
-    try:
-        stmt = select(User).where(User.username == username)
-        user = session.exec(stmt).first()
-    except Exception as e:
-        print(e)
-
-    if not user:
-        raise HTTPException(404, 'User not found')
-
-    return user
-
-
 @router.post(
     '/{username}/password',
     summary='Changes the specified user password',
@@ -309,35 +264,19 @@ async def change_user_password(
     specified user. Authentication is required to access this endpoint.
     It verifies that the new password is different from the current password
     before updating it in the database.
-
-    Args:
-        - username (str): The username of the user whose password needs to
-        be changed.
-        - patch_data (UserPasswordPatchRequest): An object containing the
-        new hashed password.
-        - session (Session, optional): An active session to interact with
-        the database. Defaults to ActiveSession.
-        - user (User): The user whose password is being changed. Defaults
-        to CanChangeUserPassword.
-
-    Returns:
-        UserResponse: An object containing the updated details of the user
-        such as username, email, etc.
-
-    Raises:
-        HTTPException:
-        - An HTTP exception with status code 400 is raised if the new
-        password matches the current one.
-        - An HTTP exception with status code 500 is raised if there is an
-        integrity error while committing to the database.
-
-    TODO:
-        Add a password change limit and a User.last_password_change attr
     """
 
     # Checks if the new password is the same as the current password
     if verify_password(patch_data.password, user.password):
         raise HTTPException(400, 'New password matches the current one')
+
+    regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
+    if not re.match(regex, patch_data.password):
+        raise HTTPException(
+            400,
+            'Password must be at least 8 characters long, contain at'
+            + 'least one upper and lower case letter and one number',
+        )
 
     # Change the password
     user.password = patch_data.hashed_password
@@ -368,15 +307,6 @@ async def send_password_reset_token(
     This function handles the POST request to send a password reset token to
     the specified email address. It triggers the sending of an email
     containing the token required for resetting the password.
-
-    Args:
-    email_request (EmailRequest): An object containing the email address to
-    which the password reset token will be sent.
-
-    Returns:
-        dict: A dictionary containing a message indicating the status of the
-        password reset token email delivery.
-
     TODO:
         create a SMTP server.
     """
@@ -386,6 +316,6 @@ async def send_password_reset_token(
     )
 
     return {
-        'message': 'If we have found a user with that email, '
+        'detail': 'If we have found a user with that email, '
         + "we've sent a password reset token to it."
     }

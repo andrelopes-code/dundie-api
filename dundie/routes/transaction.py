@@ -24,26 +24,24 @@ router = APIRouter()
 async def transfer_points_to_another_user(
     username: str,
     points: int,
+    usepdm: bool = False,
     auth_user: User = AuthenticatedUser,
     session: Session = ActiveSession,
 ):
-    """
-    A function to transfer points from one user to another.
+    """A function to transfer points from one user to another."""
 
-    Args:
-        - username (str): The username of the user transferring the points.
-        - points (int): The amount of points to be transferred.
-        - auth_user (User): The authenticated user performing the transfer.
-        - session (Session): The active session for the transfer.
-
-    Returns:
-        transaction: The transaction object representing the points transfer.
-    """
-    if auth_user.username == username:
+    # if the user is trying to transfer to himself and is not from
+    # the admin panel with usepdm = True
+    if auth_user.username == username and not (usepdm and auth_user.superuser):
         raise HTTPException(400, 'It is not possible to transfer to yourself')
 
-    from_user = get_user(username=auth_user.username, session=session)
+    # use 'pointsdeliveryman' if user is superuser and usepdm is True
+    if auth_user.superuser and usepdm:
+        from_user = get_user('pointsdeliveryman', session=session)
+    else:
+        from_user = get_user(auth_user.username, session=session)
 
+    # Checks whether the transaction can be carried out and transfers points
     transaction = check_and_transfer_points(
         from_user=from_user, points=points, session=session, username=username
     )

@@ -1,10 +1,13 @@
 from logging.config import fileConfig
 
-from alembic import context
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
 
-from dundie import models
-from dundie.config import settings
 from dundie.db import engine
+from dundie.config import settings
+from dundie import models
+
+from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -44,7 +47,7 @@ def run_migrations_offline() -> None:
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():

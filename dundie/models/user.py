@@ -8,6 +8,7 @@ from dundie.utils.utils import get_utcnow
 
 if TYPE_CHECKING:
     from .transaction import Balance, Transaction
+    from .posts import Post
 
 
 class User(SQLModel, table=True):
@@ -49,6 +50,12 @@ class User(SQLModel, table=True):
     # Populates a `.user` on `Balance`
     _balance: Optional["Balance"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "select"}
+    )
+    # Populates a `.user` on `Post`
+    posts: Optional[list["Post"]] = Relationship(
+        back_populates="user", sa_relationship_kwargs={
+            "primaryjoin": 'User.id == Post.user_id'
+        }
     )
 
     @property

@@ -17,11 +17,6 @@ from dundie.auth.functions import (
 )
 from dundie.db import ActiveSession
 from dundie.models import User
-from dundie.routes.descriptions import (
-    CHANGE_USER_PASSWORD_DESC,
-    LIST_USERS_DESC,
-    PASSWORD_RESET_EMAIL_DESC,
-)
 from dundie.security import verify_password
 from dundie.serializers import (
     EmailRequest,
@@ -189,7 +184,6 @@ async def patch_user_profile_data(
 @router.get(
     '',  # ROOT '/'
     summary='List all users',
-    description=LIST_USERS_DESC,
     response_model=Page[UserResponse],
 )
 async def list_all_users_in_db(
@@ -226,7 +220,6 @@ async def list_all_users_in_db(
 @router.get(
     '/names',
     summary='List all users',
-    description=LIST_USERS_DESC,
     dependencies=[],
     response_model=List[UsernamesResponse],
 )
@@ -249,7 +242,6 @@ async def get_usernames(
 @router.post(
     '/{username}/password',
     summary='Changes the specified user password',
-    description=CHANGE_USER_PASSWORD_DESC,
     dependencies=[],
     response_model=UserResponse,
 )
@@ -297,7 +289,6 @@ async def change_user_password(
 @router.post(
     '/pwd_reset_token',
     summary='Send an email to reset the password',
-    description=PASSWORD_RESET_EMAIL_DESC,
 )
 async def send_password_reset_token(
     email_request: EmailRequest,

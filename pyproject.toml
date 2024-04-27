@@ -86,8 +86,7 @@ combine_as_imports = true
 [tool.flake8]
 # Configurações do Flake8
 max-line-length = 79
-ignore = "E203, E266, E501, W503, W293"
-exclude = ".git, __pycache__, .venv, .eggs, *.egg"
+exclude = ".git, __pycache__, .venv, .eggs, *.egg, migrations, xpto"
 
 [tool.mypy]
 # temporarily ignore some files

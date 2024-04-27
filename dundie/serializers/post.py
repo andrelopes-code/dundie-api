@@ -20,6 +20,7 @@ class PostResponse(BaseModel):
     content: str
     user: PostUserResponse
     likes: int
+    liked: bool | None = None
 
 
 class PostRequest(BaseModel):

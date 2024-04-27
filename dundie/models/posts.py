@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
-
+from sqlalchemy import ForeignKeyConstraint
 from dundie.utils.utils import get_utcnow
 
 if TYPE_CHECKING:
@@ -40,5 +40,14 @@ class LikedPosts(SQLModel, table=True):
         foreign_key="post.id",
         primary_key=True,
         index=True,
-        nullable=False
+        nullable=False,
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["post_id"],
+            ["post.id"],
+            name="likedposts_post_id_fkey",
+            ondelete="CASCADE"
+        ),
     )

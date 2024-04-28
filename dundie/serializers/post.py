@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
+from fastapi_pagination import Page
 
 
 class PostUserResponse(BaseModel):
@@ -38,3 +39,8 @@ class PostRequest(BaseModel):
             raise HTTPException(400, 'Content is too long')
 
         return values
+
+
+class PagePostResponse(Page[PostResponse]):
+    """Page post response serializer"""
+    sort: str

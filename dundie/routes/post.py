@@ -1,47 +1,79 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from dundie.models import Post
 from dundie.models import User, LikedPosts
-from typing import List
-from dundie.serializers.post import PostResponse, PostRequest
+from typing import Literal
+from dundie.serializers.post import PagePostResponse, PostRequest, PostResponse
 from dundie.db import ActiveSession, Session
 from sqlmodel import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
 from dundie.auth.functions import AuthenticatedUser
 from dundie.controllers.post import check_post_is_liked
+from fastapi_pagination import Params
+from fastapi_pagination.ext.sqlmodel import paginate
 
 router = APIRouter()
 
 
 @router.get(
     '/post',
-    response_model=List[PostResponse]
+    response_model=PagePostResponse
 )
 async def get_posts(
-    sort: str | None = None,
+    sort: Literal[
+        'date_asc',
+        'date_desc',
+        'like_asc',
+        'like_desc'
+    ] = 'date_desc',
     user: User = AuthenticatedUser,
-    session: Session = ActiveSession
+    session: Session = ActiveSession,
+    params: Params = Depends(),
 ):
     """Get posts from database"""
 
-    # Select all posts from the database
-    stmt = (
-        select(Post)
-        .options(joinedload(Post.user))
-        .order_by(Post.date.desc())
-    )
-    posts = session.exec(statement=stmt).all()
+    # Base statement to get all posts
+    stmt_base = select(Post)
 
-    posts_with_liked = [
+    # Define the sort order and add it to the statement
+    match sort:
+        case 'date_asc':
+            stmt = stmt_base.order_by(Post.date.asc())
+        case 'date_desc':
+            stmt = stmt_base.order_by(Post.date.desc())
+        case 'like_asc':
+            stmt = stmt_base.order_by(Post.likes.asc(), Post.id.asc())
+        case 'like_desc':
+            stmt = stmt_base.order_by(Post.likes.desc(), Post.id.asc())
+
+    result = paginate(
+        query=stmt,
+        params=params,
+        session=session,
+    )
+
+    # Adjust the data to be returned
+    result.items = [
         {
-            **post.model_dump(),
-            'user': post.user.model_dump(),
-            'liked': check_post_is_liked(user, post.id, session)
+            "id": post.id,
+            "date": post.date,
+            "content": post.content,
+            "user": {
+                "id": post.user.id,
+                "name": post.user.name,
+                "username": post.user.username,
+                "dept": post.user.dept,
+                "avatar": post.user.avatar
+            },
+            "likes": post.likes,
+            "liked": check_post_is_liked(user, post.id, session)
         }
-        for post in posts
+        for post in result.items
     ]
 
-    return posts_with_liked
+    posts = result.__dict__
+    posts.update({'sort': sort})
+
+    return posts
 
 
 @router.post('/post', response_model=PostResponse)

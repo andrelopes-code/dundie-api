@@ -15,7 +15,7 @@ include = ["dundie/**/*"]
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.110.0"
-uvicorn = "^0.29.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
 sqlmodel = "^0.0.16"
 typer = "^0.10.0"
 dynaconf = "^3.2.5"

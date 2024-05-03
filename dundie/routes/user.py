@@ -234,7 +234,7 @@ async def get_usernames(
         select(User.username, User.name).where(
             User.username.like(f'%{query}%')
         )
-    ).limit(10)
+    ).filter(User.is_active).limit(10)
     users = session.exec(stmt).all()
     return users
 

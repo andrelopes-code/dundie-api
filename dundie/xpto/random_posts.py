@@ -31,6 +31,10 @@ def create_random_posts(max_per_user=30):
 
         for username in usernames:
             
+            # 50% chance of not creating a post
+            if randint(0, 1) == 0:
+                continue
+            
             user = session.exec(select(User).where(User.username == username)).first()
             
             for _ in range(0, randint(1, max_per_user)):
@@ -51,4 +55,4 @@ def create_random_posts(max_per_user=30):
             session.rollback()
             raise HTTPException(status_code=500, detail=str(e))
 
-    return {"detail": "posts created successfully"}
+    return {"status": "ok"}

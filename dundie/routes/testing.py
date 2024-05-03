@@ -1,29 +1,27 @@
-from fastapi import APIRouter, HTTPException, Depends
-from dundie.models import Post
-from dundie.models import User, LikedPosts
-from typing import List
-from dundie.serializers.post import PostResponse, PostRequest
-from dundie.db import ActiveSession, Session, engine
-from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
-from dundie.auth.functions import AuthenticatedUser
-from dundie.controllers.post import check_post_is_liked
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from dundie.xpto.random_posts import create_random_posts
 from dundie.xpto.random_like_posts import random_like_posts
-from fastapi_pagination import Page, Params
-from fastapi_pagination.ext.sqlmodel import paginate
+from dundie.xpto.random_transactions import create_random_transactions
+from dundie.xpto.create_users import create_test_users
 from rich import print as pp
 
 router = APIRouter()
 
-@router.get('/test')
-def teste(params: Params = Depends(), session: Session = ActiveSession):
-    stmt = select(User)
-    page_users = paginate(query=stmt, params=params, session=session)
-    
-    page_users.items = [
-        {'username': user.username, 'name': user.name} for user in page_users.items
-    ]
-    
-    return page_users
+@router.get('/test/random-posts')
+def teste():
+    return create_random_posts()
+
+
+@router.get('/test/random-likes')
+def teste():
+    return random_like_posts(None)
+
+
+@router.get('/test/random-users')
+def teste():
+    return create_test_users()
+
+
+@router.get('/test/random-transactions')
+def teste():
+    return create_random_transactions()

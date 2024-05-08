@@ -10,10 +10,9 @@ from .random_posts import get_random_date
 
 PRIVATE = ['pointsdeliveryman', 'admin']
 
-def get_user(username):
-    with Session(engine) as session:
-        stmt = select(User).where(User.username == username)
-        return session.exec(stmt).first()
+def get_user(username, session):
+    stmt = select(User).where(User.username == username)
+    return session.exec(stmt).first()
 
 def create_random_transactions(quantity=30):
     count = 0
@@ -32,14 +31,15 @@ def create_random_transactions(quantity=30):
             if from_user in PRIVATE or to_user in PRIVATE:
                 continue
             
-            to_user = get_user(to_user)
-            from_user = get_user(from_user)
+            to_user = get_user(to_user, session)
+            from_user = get_user(from_user, session)
+            value = randint(50, 800)
             
             try:
                 make_transaction(
                     to_user=to_user,
                     from_user=from_user,
-                    points=randint(100, 2000),
+                    points=value,
                     session=session,
                 )
                 count += 1

@@ -5,7 +5,7 @@ from .constants import NAMES
 from dundie.config import settings
 from dundie.controllers import create_user_and_balance
 
-departments = ["marketing", "sales", "humanresources", "finance", "operations"]
+departments = ["marketing", "sales", "humanresources", "finance", "operations", "it", "logistics"]
 default_password = "@Dundie2024!"
 names = NAMES
 

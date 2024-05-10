@@ -7,7 +7,7 @@ from dundie.auth.functions import SuperUser
 from dundie.config import settings
 from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
-from dundie.models import User
+from dundie.models import User, Orders
 from dundie.security import verify_password
 from dundie.serializers.admin import (
     UserAdminResponse,
@@ -15,7 +15,6 @@ from dundie.serializers.admin import (
 )
 from dundie.serializers.user import UserRequest, UserResponse
 
-# TODO: VALIDATE IF THE TOKEN IS FRESH
 router = APIRouter()
 
 
@@ -140,3 +139,22 @@ async def get_full_user_data_by_username(
         raise HTTPException(404, 'User not found')
 
     return user
+
+
+@router.get(
+    '/shop/orders',
+    dependencies=[SuperUser],
+)
+async def get_orders(
+    session: Session = ActiveSession,
+    params: Params = Depends(),
+):
+    """Returns all orders"""
+    query = select(Orders).order_by(Orders.status.desc())
+    try:
+        # Paginates the user list response
+        return paginate(query=query, params=params, session=session)
+    except Exception as e:
+        print(e)
+
+    return {'detail': 'failed to return orders'}

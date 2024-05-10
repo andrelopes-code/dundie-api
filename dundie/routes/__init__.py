@@ -6,6 +6,7 @@ from .transaction import router as transaction_router
 from .user import router as user_router
 from .post import router as post_router
 from .testing import router as testing_router
+from .shop import router as shop_router
 
 main_router = APIRouter(redirect_slashes=False)
 
@@ -22,3 +23,5 @@ main_router.include_router(
 main_router.include_router(router=post_router, tags=['Post'])
 
 main_router.include_router(router=testing_router, tags=['Test'])
+
+main_router.include_router(router=shop_router, tags=['Shop'])

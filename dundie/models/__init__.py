@@ -4,7 +4,7 @@ from .transaction import Balance, Transaction
 from .user import User
 from .posts import Post, LikedPosts
 from .others import Feedbacks
-from .shop import Products
+from .shop import Products, Orders
 
 __all__ = [
     'User',
@@ -15,4 +15,5 @@ __all__ = [
     'LikedPosts',
     'Products',
     'Feedbacks',
+    'Orders',
 ]

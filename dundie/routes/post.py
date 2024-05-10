@@ -77,7 +77,7 @@ async def get_posts(
 
 
 @router.post('/post', response_model=PostResponse)
-def create_new_post(
+async def create_new_post(
     post_data: PostRequest,
     user: User = AuthenticatedUser,
     session: Session = ActiveSession
@@ -98,7 +98,7 @@ def create_new_post(
 
 
 @router.delete('/post/{post_id}')
-def delete_post(
+async def delete_post(
     post_id: int,
     user: User = AuthenticatedUser,
     session: Session = ActiveSession
@@ -125,7 +125,7 @@ def delete_post(
 
 
 @router.post('/post/{post_id}/like')
-def like_post(
+async def like_post(
     post_id: int,
     user: User = AuthenticatedUser,
     session: Session = ActiveSession
@@ -157,7 +157,7 @@ def like_post(
 
 
 @router.delete('/post/{post_id}/like')
-def unlike_post(
+async def unlike_post(
     post_id: int,
     user: User = AuthenticatedUser,
     session: Session = ActiveSession

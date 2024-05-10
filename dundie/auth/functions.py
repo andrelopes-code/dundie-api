@@ -128,7 +128,6 @@ def get_current_user(
                 token = authorization.split(' ')[1]
             except IndexError:
                 raise exp401('Invalid authorization header format')
-
     # Verify the token and get the username from the payload
     # The token is decoded using the SECRET_KEY and the ALGORITHM specified
     try:

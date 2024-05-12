@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import Session, select
-
+import re
 from dundie.auth.functions import SuperUser
 from dundie.config import settings
+from dundie.utils.utils import apply_user_patch
 from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
 from dundie.models import User, Orders
@@ -12,6 +13,7 @@ from dundie.security import verify_password
 from dundie.serializers.admin import (
     UserAdminResponse,
     UserChangeVisibilityRequest,
+    FullUserPatchRequest
 )
 from dundie.serializers.user import UserRequest, UserResponse
 
@@ -33,7 +35,6 @@ async def list_all_users_in_db(
     """Returns a page with a user list"""
 
     query = select(User).order_by(User.name)
-
     try:
         # Paginates the user list response
         return paginate(query=query, params=params, session=session)
@@ -139,6 +140,60 @@ async def get_full_user_data_by_username(
         raise HTTPException(404, 'User not found')
 
     return user
+
+
+@router.patch(
+    '/{username}',
+    summary='Updates a user by username',
+)
+async def update_user_by_username(
+    *,
+    username: str,
+    admin_user: User = SuperUser,
+    patch_data: FullUserPatchRequest,
+    session: Session = ActiveSession,
+):
+    """Updates a user by username"""
+
+    if not verify_password(patch_data.admin_password, admin_user.password):
+        raise HTTPException(401, 'Invalid admin password')
+
+    stmt = select(User).where(User.username == username)
+    user = session.exec(stmt).first()
+    if not user:
+        raise HTTPException(404, 'User not found')
+
+    # Set the new password if it was provided
+    if patch_data.new_password:
+        # Checks if the new password is the same as the current password
+        if verify_password(patch_data.new_password, user.password):
+            raise HTTPException(400, 'New password matches the current one')
+
+        # Checks if the new password is complex enough
+        regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
+        if not re.match(regex, patch_data.new_password):
+            raise HTTPException(
+                400,
+                'Password must be at least 8 characters long, contain at'
+                + 'least one upper and lower case letter and one number',
+            )
+
+        user.password = patch_data.hashed_password
+
+    # Remove passwords from the patch data and apply it to the user
+    delattr(patch_data, 'new_password')
+    delattr(patch_data, 'admin_password')
+    apply_user_patch(user, patch_data)
+
+    session.add(user)
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(e)
+        raise HTTPException(500, 'An error occurred while updating the user')
+
+    return {'detail': f'user {username} updated'}
 
 
 @router.get(

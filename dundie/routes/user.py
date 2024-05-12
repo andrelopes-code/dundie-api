@@ -239,6 +239,7 @@ async def get_usernames(
     return users
 
 
+# * POST /{username}/password ~ Changes the specified user password
 @router.post(
     '/{username}/password',
     summary='Changes the specified user password',
@@ -286,6 +287,7 @@ async def change_user_password(
     return user
 
 
+# * POST /pwd_reset_token ~ Send an email to reset the password
 @router.post(
     '/pwd_reset_token',
     summary='Send an email to reset the password',

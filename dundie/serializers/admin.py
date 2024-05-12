@@ -1,6 +1,6 @@
 from datetime import datetime
-
 from pydantic import BaseModel
+from dundie.security import get_password_hash
 
 
 class UserAdminResponse(BaseModel):
@@ -9,6 +9,7 @@ class UserAdminResponse(BaseModel):
     id: int
     created_at: datetime
     is_active: bool
+    private: bool
     name: str
     username: str
     email: str
@@ -47,3 +48,21 @@ class FullUserDataResponse(BaseModel):
     private: bool
     currency: str
     last_password_change: datetime
+
+
+class FullUserPatchRequest(BaseModel):
+    """User request serializer for creating or updating a user."""
+
+    email: str
+    new_password: str
+    admin_password: str
+    name: str
+    dept: str
+    username: str
+    is_active: bool
+    private: bool
+
+    @property
+    def hashed_password(self) -> str:
+        """Returns hashed password"""
+        return get_password_hash(self.new_password)

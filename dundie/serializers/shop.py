@@ -19,6 +19,7 @@ class ProductRequest(BaseModel):
 
 
 class ProductUpdateRequest(BaseModel):
+    id: int
     name: str | None = None
     image: str | None = None
     description: str | None = None

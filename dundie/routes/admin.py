@@ -3,12 +3,13 @@ from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import Session, select
 import re
+from dundie.utils.utils import get_utcnow
 from dundie.auth.functions import SuperUser
 from dundie.config import settings
 from dundie.utils.utils import apply_user_patch
 from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
-from dundie.models import User, Orders
+from dundie.models import User, Orders, Products
 from dundie.security import verify_password
 from dundie.serializers.admin import (
     UserAdminResponse,
@@ -16,6 +17,11 @@ from dundie.serializers.admin import (
     FullUserPatchRequest
 )
 from dundie.serializers.user import UserRequest, UserResponse
+from dundie.serializers.shop import (
+    ProductRequest,
+    ProductResponse,
+    ProductUpdateRequest
+)
 
 router = APIRouter()
 
@@ -213,3 +219,91 @@ async def get_orders(
         print(e)
 
     return {'detail': 'failed to return orders'}
+
+
+@router.post(
+    '/shop/product',
+    dependencies=[SuperUser],
+    response_model=ProductResponse
+)
+async def create_product(
+    product: ProductRequest,
+    session: Session = ActiveSession,
+):
+    """Creates a new product"""
+    new_product = Products(
+        name=product.name,
+        description=product.description,
+        image=product.image,
+        price=product.price,
+    )
+
+    session.add(new_product)
+    try:
+        session.commit()
+        session.refresh(new_product)
+    except Exception as e:
+        session.rollback()
+        print(e)
+        raise HTTPException(500, 'An error occurred w creating the product')
+
+    return new_product
+
+
+@router.patch(
+    '/shop/product',
+    dependencies=[SuperUser],
+    response_model=ProductResponse
+)
+async def update_product(
+    patch_data: ProductUpdateRequest,
+    session: Session = ActiveSession,
+):
+    """Updates a product"""
+    stmt = select(Products).where(Products.id == patch_data.id)
+    product = session.exec(stmt).first()
+    if not product:
+        raise HTTPException(404, 'Product not found')
+
+    for atribute, value in patch_data:
+        if value is not None:
+            setattr(product, atribute, value)
+
+    product.updated_at = get_utcnow()
+
+    session.add(product)
+    try:
+        session.commit()
+        session.refresh(product)
+    except Exception as e:
+        session.rollback()
+        print(e)
+        raise HTTPException(500, 'An error occurred w updating the product')
+
+    return product
+
+
+@router.delete(
+    '/shop/product',
+    dependencies=[SuperUser]
+)
+async def delete_product(
+    product_id: int,
+    session: Session = ActiveSession
+):
+    """Deletes a product"""
+
+    stmt = select(Products).where(Products.id == product_id)
+    product = session.exec(stmt).first()
+    if not product:
+        raise HTTPException(404, 'Product not found')
+
+    try:
+        session.delete(product)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(e)
+        raise HTTPException(500, 'An error occurred w deleting the product')
+
+    return {'detail': 'product deleted successfully'}

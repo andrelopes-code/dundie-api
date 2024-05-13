@@ -288,12 +288,12 @@ async def update_product(
     dependencies=[SuperUser]
 )
 async def delete_product(
-    product_id: int,
+    id: int,
     session: Session = ActiveSession
 ):
     """Deletes a product"""
 
-    stmt = select(Products).where(Products.id == product_id)
+    stmt = select(Products).where(Products.id == id)
     product = session.exec(stmt).first()
     if not product:
         raise HTTPException(404, 'Product not found')

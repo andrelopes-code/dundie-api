@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import Session, select
@@ -285,13 +285,21 @@ async def update_product(
 
 @router.delete(
     '/shop/product',
-    dependencies=[SuperUser]
+    summary='Deletes a product [ADMIN]',
 )
 async def delete_product(
+    request: Request,
     id: int,
-    session: Session = ActiveSession
+    user: User = SuperUser,
+    session: Session = ActiveSession,
 ):
     """Deletes a product"""
+
+    admin_password = request.headers.get('x-admin-password')
+    is_valid = verify_password(admin_password, user.password)
+    print(is_valid, admin_password, user.password)
+    if not is_valid:
+        raise HTTPException(401, 'Invalid admin password')
 
     stmt = select(Products).where(Products.id == id)
     product = session.exec(stmt).first()

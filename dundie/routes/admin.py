@@ -6,7 +6,7 @@ import re
 from dundie.utils.utils import get_utcnow
 from dundie.auth.functions import SuperUser
 from dundie.config import settings
-from dundie.utils.utils import apply_user_patch
+from dundie.utils.utils import apply_user_patch, verify_admin_password_header
 from dundie.controllers import create_user_and_balance
 from dundie.db import ActiveSession
 from dundie.models import User, Orders, Products
@@ -54,13 +54,18 @@ async def list_all_users_in_db(
     '/user',
     summary='Creates a new user [ADMIN]',
     status_code=201,
-    dependencies=[SuperUser],
     response_model=UserResponse,
 )
 async def create_new_user_in_db(
-    *, session: Session = ActiveSession, user: UserRequest
+    *,
+    request: Request,
+    user: UserRequest,
+    auth_user: User = SuperUser,
+    session: Session = ActiveSession,
 ):
     """Creates a new user in the database"""
+
+    verify_admin_password_header(request, auth_user)
 
     # Checks if there is already a user with that username
     stmt = select(User).where(User.username == user.username)
@@ -223,14 +228,18 @@ async def get_orders(
 
 @router.post(
     '/shop/product',
-    dependencies=[SuperUser],
     response_model=ProductResponse
 )
 async def create_product(
+    request: Request,
     product: ProductRequest,
+    auth_user: User = SuperUser,
     session: Session = ActiveSession,
 ):
     """Creates a new product"""
+
+    verify_admin_password_header(request, auth_user)
+
     new_product = Products(
         name=product.name,
         description=product.description,
@@ -252,14 +261,17 @@ async def create_product(
 
 @router.patch(
     '/shop/product',
-    dependencies=[SuperUser],
     response_model=ProductResponse
 )
 async def update_product(
+    request: Request,
     patch_data: ProductUpdateRequest,
+    auth_user: User = SuperUser,
     session: Session = ActiveSession,
 ):
     """Updates a product"""
+    verify_admin_password_header(request, auth_user)
+
     stmt = select(Products).where(Products.id == patch_data.id)
     product = session.exec(stmt).first()
     if not product:
@@ -295,7 +307,7 @@ async def delete_product(
 ):
     """Deletes a product"""
 
-    admin_password = request.headers.get('x-admin-password')
+    admin_password = request.headers.get('X-Admin-Password')
     is_valid = verify_password(admin_password, user.password)
     print(is_valid, admin_password, user.password)
     if not is_valid:

@@ -5,9 +5,9 @@ from datetime import datetime, timezone
 from functools import wraps
 from typing import TYPE_CHECKING
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-
+from dundie.security import verify_password
 from dundie.config import settings
 from dundie.db import engine
 
@@ -179,3 +179,13 @@ def validate_user_links(links: dict):
             raise HTTPException(400, 'Invalid Instagram link')
 
     return links
+
+
+def verify_admin_password_header(request: Request, auth_user: "User"):
+    request_password = request.headers.get('X-Admin-Password')
+    print(request_password, auth_user.password)
+    if not request_password:
+        raise HTTPException(400, 'Missing X-Password header')
+    is_valid = verify_password(request_password, auth_user.password)
+    if not is_valid:
+        raise HTTPException(401, 'Invalid admin password')

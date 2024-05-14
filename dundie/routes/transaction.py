@@ -1,9 +1,8 @@
 from typing import List
-
-from fastapi import APIRouter, HTTPException
+from dundie.utils.utils import verify_admin_password_header
+from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import or_
 from sqlmodel import Session, select
-
 from dundie.auth.functions import AuthenticatedUser, get_user
 from dundie.controllers.transaction import check_and_transfer_points
 from dundie.db import ActiveSession
@@ -22,6 +21,7 @@ router = APIRouter()
     summary='Transfer poinst from an user to another user',
 )
 async def transfer_points_to_another_user(
+    request: Request,
     username: str,
     points: int,
     usepdm: bool = False,
@@ -37,6 +37,7 @@ async def transfer_points_to_another_user(
 
     # use 'pointsdeliveryman' if user is superuser and usepdm is True
     if auth_user.superuser and usepdm:
+        verify_admin_password_header(request, auth_user)
         from_user = get_user('pointsdeliveryman', session=session)
     else:
         from_user = get_user(auth_user.username, session=session)

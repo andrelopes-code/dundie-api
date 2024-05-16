@@ -40,14 +40,6 @@ def create_private_users(session):
             "private": True,
             "currency": "USD"
         },
-        {
-            "name": "André Lopes",
-            "username": "andrelps",
-            "email": "andrelps@gmail.com",
-            "password": "38902840",
-            "dept": "management",
-            "currency": "USD"
-        },
     ]
     
     for user in private_users:

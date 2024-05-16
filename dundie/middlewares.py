@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
+# !
 def configure_cors(app: FastAPI):
     origins = [
         "http://localhost",
@@ -23,8 +24,6 @@ def configure_cors_dev(app: FastAPI):
         CORSMiddleware,
         allow_origins=[
             "*",
-            "http://localhost:8000",
-            "http://localhost:3000",
         ],
         allow_credentials=True,
         allow_methods=["*"],

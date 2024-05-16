@@ -1,23 +1,21 @@
 #!/usr/bin/bash
 
-# Arquivos na raiz
-touch setup.py
-touch {pyproject,settings,.secrets}.toml
-touch {requirements,MANIFEST}.in
-touch Dockerfile.dev docker-compose.yaml
+# Create secrets.toml file
+echo "[development]" > .secrets.toml
+echo "dynaconf_merge = true" >> .secrets.toml
+echo "" >> .secrets.toml
+echo "[development.security]" >> .secrets.toml
+echo "# openssl rand -hex 32" >> .secrets.toml
+echo "ADMIN_PASS = \"admin\"" >> .secrets.toml
+echo "DELIVERY_PASS = \"delivery\"" >> .secrets.toml
+echo "SECRET_KEY = \"cc47718e359f700772b80da58e581d4843317ab1ee99bb649c45a64be914a6e2\"" >> .secrets.toml
 
-# Imagem do banco de dados
-mkdir postgres
-touch postgres/{Dockerfile,create-databases.sh}
+# Start environment with docker-compose
+docker-compose up -d
 
-# Aplicação
-mkdir -p dundie/{models,routes}
-touch dundie/default.toml
-touch dundie/{__init__,cli,app,auth,db,security,config}.py
-touch dundie/models/{__init__,account,user}.py
-touch dundie/routes/{__init__,auth,account,user}.py
+# wait 5 seconds
+sleep 5
 
-# Testes
-touch test.sh
-mkdir tests
-touch tests/{__init__,conftest,test_api}.py
+# Initial data in database
+docker-compose exec api alembic stamp base
+docker-compose exec api alembic upgrade head

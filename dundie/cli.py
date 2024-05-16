@@ -6,7 +6,16 @@ from sqlmodel import Session, select
 
 from dundie.config import settings
 from dundie.db import engine
-from dundie.models import Balance, Transaction, User
+from dundie.models import (
+    Balance,
+    Transaction,
+    User,
+    Feedbacks,
+    LikedPosts,
+    Orders,
+    Post,
+    Products,
+)
 from dundie.utils.utils import get_username
 
 main = typer.Typer(name='dundie CLI', add_completion=False)
@@ -115,3 +124,16 @@ def disable_user(username):
         session.commit()
         session.refresh(user)
         bprint("user '{username}' deactivated")
+
+
+@main.command()
+def initialize():
+    from dundie.xpto.random_posts import create_random_posts
+    from dundie.xpto.random_transactions import create_random_transactions
+    from dundie.xpto.create_users import create_test_users
+    from dundie.xpto.create_products import create_initial_products
+
+    create_test_users()
+    create_random_posts()
+    create_random_transactions()
+    create_initial_products()

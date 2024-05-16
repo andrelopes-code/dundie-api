@@ -64,7 +64,7 @@ def upgrade() -> None:
     sa.Column('last_password_change', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email', name='uq_user_email'),
-    sa,UniqueConstraint('username', name='uq_user_username'),
+    sa.UniqueConstraint('username', name='uq_user_username'),
     )
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)

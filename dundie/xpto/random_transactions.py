@@ -1,10 +1,8 @@
 from random import choice, randint
 from time import time
-
 from sqlmodel import Session, select
-
 from dundie.controllers.transaction import make_transaction
-from dundie.models import User, Transaction
+from dundie.models import User, Transaction, Balance
 from dundie.db import engine
 from .random_posts import get_random_date
 
@@ -13,6 +11,22 @@ PRIVATE = ['pointsdeliveryman', 'admin']
 def get_user(username, session):
     stmt = select(User).where(User.username == username)
     return session.exec(stmt).first()
+
+def set_random_users_balance():
+    with Session(engine) as session:
+
+        stmt = select(User)
+        users = session.exec(stmt).all()
+        
+        for user in users:
+            user_balance = session.get(Balance, user.id)
+            user_balance.value = randint(100, 1200)
+            session.add(user_balance)
+            
+        try:
+            session.commit()
+        except Exception as e:
+            raise ValueError("ERROR")
 
 def create_random_transactions(quantity=30):
     count = 0
@@ -34,6 +48,9 @@ def create_random_transactions(quantity=30):
             to_user = get_user(to_user, session)
             from_user = get_user(from_user, session)
             value = randint(50, 800)
+            
+            if from_user.balance < value:
+                continue
             
             try:
                 make_transaction(

@@ -10,11 +10,6 @@ from dundie.models import (
     Balance,
     Transaction,
     User,
-    Feedbacks,
-    LikedPosts,
-    Orders,
-    Post,
-    Products,
 )
 from dundie.utils.utils import get_username
 
@@ -129,11 +124,15 @@ def disable_user(username):
 @main.command()
 def initialize():
     from dundie.xpto.random_posts import create_random_posts
-    from dundie.xpto.random_transactions import create_random_transactions
+    from dundie.xpto.random_transactions import (
+        create_random_transactions,
+        set_random_users_balance
+    )
     from dundie.xpto.create_users import create_test_users
     from dundie.xpto.create_products import create_initial_products
 
     create_test_users()
     create_random_posts()
+    set_random_users_balance()
     create_random_transactions()
     create_initial_products()

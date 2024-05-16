@@ -34,13 +34,19 @@ def send_email_smtp(email: str, message: str):
         SMTPException: If an SMTP error occurs during sending.
     """
     try:
-        with smtplib.SMTP_SSL(
+        # ! SSL
+        with smtplib.SMTP(
             host=settings.email.smtp_server, port=settings.email.smtp_port
         ) as server:
+            # Start TLS encryption if you want to upgrade the connection secure
+            # server.starttls()
 
+            # Authentication
             server.login(
                 settings.email.smtp_user, settings.email.smtp_password
             )
+
+            # Sending email
             server.sendmail(
                 from_addr=settings.email.smtp_sender,
                 to_addrs=email,

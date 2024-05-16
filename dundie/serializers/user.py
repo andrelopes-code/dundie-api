@@ -11,7 +11,6 @@ from fastapi import HTTPException
 from pydantic import BaseModel, root_validator
 from sqlmodel import Session
 
-# ! TEMPORARY SOLUTION
 from dundie.db import engine
 from dundie.models.transaction import Balance
 from dundie.security import get_password_hash

@@ -88,23 +88,23 @@ async def get_recent_transactions(session: Session = ActiveSession):
     """
 
     stmt = select(Transaction).order_by(Transaction.date.desc()).limit(5)
-    transactions = session.exec(stmt).all()
+    recent_transactions = session.exec(stmt).all()
 
     # ! I know this is not the best way to do this
-    trans_dict = [
+    transactions_dict_list = [
         {
-            "id": t.id,
-            "from_id": t.from_id,
-            "to_id": t.user_id,
-            "from_user": t.from_user,
-            "to_user": t.user,
-            "points": t.value,
-            "date": t.date,
+            "id": transaction.id,
+            "from_id": transaction.from_id,
+            "to_id": transaction.user_id,
+            "from_user": transaction.from_user,
+            "to_user": transaction.user,
+            "points": transaction.value,
+            "date": transaction.date,
         }
-        for t in transactions
+        for transaction in recent_transactions
     ]
 
-    return trans_dict
+    return transactions_dict_list
 
 
 @router.get(
@@ -137,21 +137,20 @@ async def get_user_transactions(
         .where(or_(Transaction.user_id == uid, Transaction.from_id == uid))
         .order_by(Transaction.date.desc())
     )
-    transactions = session.exec(stmt).all()
+    user_transactions = session.exec(stmt).all()
 
     # ! I know this is not the best way to do this
-    # TODO: refactor this
-    trans_dict = [
+    transactions_dict_list = [
         {
-            "id": t.id,
-            "from_id": t.from_id,
-            "to_id": t.user_id,
-            "from_user": t.from_user,
-            "to_user": t.user,
-            "points": t.value,
-            "date": t.date,
+            "id": transaction.id,
+            "from_id": transaction.from_id,
+            "to_id": transaction.user_id,
+            "from_user": transaction.from_user,
+            "to_user": transaction.user,
+            "points": transaction.value,
+            "date": transaction.date,
         }
-        for t in transactions
+        for transaction in user_transactions
     ]
 
-    return trans_dict
+    return transactions_dict_list

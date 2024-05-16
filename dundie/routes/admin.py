@@ -96,9 +96,6 @@ async def change_user_visibility_by_username(
     session: Session = ActiveSession,
 ):
     """Changes the visibility of a user by username"""
-
-    # TODO: VALIDATE IF THE TOKEN IS FRESH
-
     is_valid = verify_password(data.password, current_user.password)
 
     if not is_valid:

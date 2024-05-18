@@ -229,12 +229,14 @@ async def get_usernames(
 ):
     if not query:
         return []
-    # !
+
     stmt = (
-        select(User.username, User.name).where(
-            User.username.like(f'%{query}%')
-        )
-    ).filter(User.is_active).limit(10)
+        select(User.username, User.name)
+        .where(User.username.like(f'%{query}%'))
+        .filter(and_(User.is_active == True, User.private == False))  # noqa: E712 E501
+        .limit(10)
+    )
+    print(stmt)
     users = session.exec(stmt).all()
     return users
 

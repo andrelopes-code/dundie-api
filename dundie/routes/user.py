@@ -236,7 +236,6 @@ async def get_usernames(
         .filter(and_(User.is_active == True, User.private == False))  # noqa: E712 E501
         .limit(10)
     )
-    print(stmt)
     users = session.exec(stmt).all()
     return users
 

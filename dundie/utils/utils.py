@@ -132,7 +132,6 @@ def validate_bio(bio):
 
 def validate_user_fields(user: dict):
     # if data is "" bypass the validation
-    print(user)
     if name := user.get('name'):
         validate_name(name)
     if username := user.get('username'):

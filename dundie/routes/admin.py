@@ -99,7 +99,6 @@ async def change_user_visibility_by_username(
     is_valid = verify_password(data.password, current_user.password)
 
     if not is_valid:
-        print(is_valid, current_user.password, data.password)
         raise HTTPException(401, 'Invalid password')
 
     stmt = select(User).where(User.username == data.username)
@@ -306,7 +305,6 @@ async def delete_product(
 
     admin_password = request.headers.get('X-Admin-Password')
     is_valid = verify_password(admin_password, user.password)
-    print(is_valid, admin_password, user.password)
     if not is_valid:
         raise HTTPException(401, 'Invalid admin password')
 

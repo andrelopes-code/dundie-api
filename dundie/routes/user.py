@@ -223,7 +223,7 @@ async def list_all_users_in_db(
     dependencies=[],
     response_model=List[UsernamesResponse],
 )
-async def get_usernames(
+async def get_names_and_usernames(
     query: str | None = None,
     session: Session = ActiveSession,
 ):
@@ -232,8 +232,13 @@ async def get_usernames(
 
     stmt = (
         select(User.username, User.name)
-        .where(User.username.like(f'%{query}%'))
-        .filter(and_(User.is_active == True, User.private == False))  # noqa: E712 E501
+        .where(
+            and_(
+                User.is_active == True,  # noqa: E712 E501
+                User.private == False,  # noqa: E712 E501
+            )
+        )
+        .filter(User.username.like(f'%{query}%'))
         .limit(10)
     )
     users = session.exec(stmt).all()
@@ -269,7 +274,7 @@ async def change_user_password(
         raise HTTPException(
             400,
             'Password must be at least 8 characters long, contain at'
-            + 'least one upper and lower case letter and one number',
+            + 'least one upper and lower case letter and one number',  # noqa: W503
         )
 
     # Change the password
@@ -311,5 +316,5 @@ async def send_password_reset_token(
 
     return {
         'detail': 'If we have found a user with that email, '
-        + "we've sent a password reset token to it."
+        + "we've sent a password reset token to it."  # noqa: W503
     }

@@ -126,7 +126,7 @@ def initialize():
     from dundie.xpto.random_posts import create_random_posts
     from dundie.xpto.random_transactions import (
         create_random_transactions,
-        set_random_users_balance
+        set_random_users_balance,
     )
     from dundie.xpto.create_users import create_test_users
     from dundie.xpto.create_products import create_initial_products

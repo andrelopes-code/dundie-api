@@ -14,13 +14,13 @@ from dundie.security import verify_password
 from dundie.serializers.admin import (
     UserAdminResponse,
     UserChangeVisibilityRequest,
-    FullUserPatchRequest
+    FullUserPatchRequest,
 )
 from dundie.serializers.user import UserRequest, UserResponse
 from dundie.serializers.shop import (
     ProductRequest,
     ProductResponse,
-    ProductUpdateRequest
+    ProductUpdateRequest,
 )
 
 router = APIRouter()
@@ -35,7 +35,6 @@ router = APIRouter()
 async def list_all_users_in_db(
     *,
     session: Session = ActiveSession,
-    current_user: User = SuperUser,
     params: Params = Depends(),
 ):
     """Returns a page with a user list"""
@@ -222,10 +221,7 @@ async def get_orders(
     return {'detail': 'failed to return orders'}
 
 
-@router.post(
-    '/shop/product',
-    response_model=ProductResponse
-)
+@router.post('/shop/product', response_model=ProductResponse)
 async def create_product(
     request: Request,
     product: ProductRequest,
@@ -255,10 +251,7 @@ async def create_product(
     return new_product
 
 
-@router.patch(
-    '/shop/product',
-    response_model=ProductResponse
-)
+@router.patch('/shop/product', response_model=ProductResponse)
 async def update_product(
     request: Request,
     patch_data: ProductUpdateRequest,

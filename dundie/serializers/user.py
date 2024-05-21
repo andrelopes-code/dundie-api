@@ -15,6 +15,7 @@ from dundie.db import engine
 from dundie.models.transaction import Balance
 from dundie.security import get_password_hash
 from dundie.utils.utils import (
+    check_password_complexity,
     get_username,
     validate_user_fields,
     validate_user_links,
@@ -86,14 +87,9 @@ class UserRequest(BaseModel):
     def check_passwords_complexity(cls, values):
         """Checks if passwords complexity is met"""
 
-        regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
+        password = values.get('password')
+        check_password_complexity(password)
 
-        if not re.match(regex, values.get('password')):
-            raise HTTPException(
-                400,
-                'Password must be at least 8 characters long and contain at'
-                + 'least one letter and one number',
-            )
         return values
 
 

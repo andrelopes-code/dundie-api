@@ -30,7 +30,11 @@ from dundie.serializers import (
     UserResponse,
 )
 from dundie.tasks.user import try_to_send_password_reset_email
-from dundie.utils.utils import apply_user_links_patch, apply_user_profile_patch
+from dundie.utils.utils import (
+    apply_user_links_patch,
+    apply_user_profile_patch,
+    check_password_complexity,
+)
 
 router = APIRouter()
 
@@ -269,13 +273,8 @@ async def change_user_password(
     if verify_password(patch_data.password, user.password):
         raise HTTPException(400, 'New password matches the current one')
 
-    regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
-    if not re.match(regex, patch_data.password):
-        raise HTTPException(
-            400,
-            'Password must be at least 8 characters long, contain at'
-            + 'least one upper and lower case letter and one number',  # noqa: W503
-        )
+    # checks password complexity
+    check_password_complexity(patch_data.password)
 
     # Change the password
     user.password = patch_data.hashed_password

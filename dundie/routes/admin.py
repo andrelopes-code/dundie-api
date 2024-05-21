@@ -3,7 +3,11 @@ from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import Session, select
 import re
-from dundie.utils.utils import apply_product_patch, get_utcnow
+from dundie.utils.utils import (
+    apply_product_patch,
+    check_password_complexity,
+    get_utcnow,
+)
 from dundie.auth.functions import SuperUser
 from dundie.config import settings
 from dundie.utils.utils import apply_user_patch, verify_admin_password_header
@@ -179,13 +183,7 @@ async def update_user_by_username(
             raise HTTPException(400, 'New password matches the current one')
 
         # Checks if the new password is complex enough
-        regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
-        if not re.match(regex, patch_data.new_password):
-            raise HTTPException(
-                400,
-                'Password must be at least 8 characters long, contain at'
-                + 'least one upper and lower case letter and one number',
-            )
+        check_password_complexity(patch_data.new_password)
 
         user.password = patch_data.hashed_password
 

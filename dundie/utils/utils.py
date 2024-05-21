@@ -191,3 +191,13 @@ def verify_admin_password_header(request: Request, auth_user: "User"):
     is_valid = verify_password(request_password, auth_user.password)
     if not is_valid:
         raise HTTPException(401, 'Invalid admin password')
+
+
+def check_password_complexity(password: str) -> None:
+    password_regex = r"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"
+    if not re.match(password_regex, password):
+        raise HTTPException(
+            400,
+            'Password must be at least 8 characters long, contain at'
+            + 'least one upper and lower case letter and one number',
+        )

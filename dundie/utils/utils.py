@@ -17,59 +17,59 @@ if TYPE_CHECKING:
     from dundie.serializers.shop import ProductUpdateRequest
 
 
-def apply_user_patch(
-    user: 'User', patch_data: 'UserPatchRequest', ignore: list = []
-) -> None:
+def apply_user_patch(user: 'User', patch_data: any, ignore: list = []) -> None:
     """
     Updates the user object with the provided patch data.
 
     Args:
         user (User): The user object to be updated.
-        patch_data (UserPatchRequest): The patch data containing
+        patch_data: The patch data containing
         attributes and their new values.
     """
     for atribute, value in patch_data:
-        if value is not None and value not in ignore:
+        if value is not None and atribute not in ignore:
             setattr(user, atribute, value)
 
 
 def apply_product_patch(
-    product: 'Products', patch_data: 'ProductUpdateRequest', ignore: list = []
+    product: 'Products', patch_data: any, ignore: list = []
 ) -> None:
     """
     Updates the product object with the provided patch data.
 
     Args:
         product (Products): The product object to be updated.
-        patch_data (ProductUpdateRequest): The patch data containing
+        patch_data: The patch data containing
         attributes and their new values.
     """
     for atribute, value in patch_data:
-        if value is not None and value not in ignore:
+        if value is not None and atribute not in ignore:
             setattr(product, atribute, value)
 
 
-def apply_user_profile_patch(user: 'User', patch_data) -> None:
+def apply_user_profile_patch(
+    user: 'User', patch_data: any, ignore: list = []
+) -> None:
     """
     Updates the user object with the provided patch data.
 
     Args:
         user (User): The user object to be updated.
-        patch_data (UserProfilePatchRequest): The patch data containing
+        patch_data: The patch data containing
         attributes and their new values.
     """
     for atribute, value in patch_data:
-        if value is not None and value != '':
+        if value is not None and value != '' and atribute not in ignore:
             setattr(user, atribute, value)
 
 
-def apply_user_links_patch(user: 'User', patch_data) -> None:
+def apply_user_links_patch(user: 'User', patch_data: any) -> None:
     """
     Updates the user object with the provided patch data.
 
     Args:
         user (User): The user object to be updated.
-        patch_data (UserProfilePatchRequest): The patch data containing
+        patch_data: The patch data containing
         attributes and their new values.
     """
     for atribute, value in patch_data:
@@ -149,9 +149,9 @@ def validate_user_fields(user: dict):
 
 def validate_user_links(links: dict):
 
-    github = links.get('github')
-    linkedin = links.get('linkedin')
-    instagram = links.get('instagram')
+    github: str | None = links.get('github')
+    linkedin: str | None = links.get('linkedin')
+    instagram: str | None = links.get('instagram')
 
     if github:
         if not github.startswith(

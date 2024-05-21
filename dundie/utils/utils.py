@@ -12,8 +12,9 @@ from dundie.config import settings
 from dundie.db import engine
 
 if TYPE_CHECKING:
-    from dundie.models import User
+    from dundie.models import User, Products
     from dundie.serializers import UserPatchRequest
+    from dundie.serializers.shop import ProductUpdateRequest
 
 
 def apply_user_patch(
@@ -30,6 +31,22 @@ def apply_user_patch(
     for atribute, value in patch_data:
         if value is not None and value not in ignore:
             setattr(user, atribute, value)
+
+
+def apply_product_patch(
+    product: 'Products', patch_data: 'ProductUpdateRequest', ignore: list = []
+) -> None:
+    """
+    Updates the product object with the provided patch data.
+
+    Args:
+        product (Products): The product object to be updated.
+        patch_data (ProductUpdateRequest): The patch data containing
+        attributes and their new values.
+    """
+    for atribute, value in patch_data:
+        if value is not None and value not in ignore:
+            setattr(product, atribute, value)
 
 
 def apply_user_profile_patch(user: 'User', patch_data) -> None:
@@ -86,18 +103,6 @@ def get_username(name: str) -> str:
             chars.append(c)
 
     return ''.join(chars)
-
-
-def timer(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        inicio = time.time()
-        resultado = await func(*args, **kwargs)
-        fim = time.time()
-        print(f"\033[36mTempo de execução: {fim - inicio}\033[m")
-        return resultado
-
-    return wrapper
 
 
 def validate_name(name):

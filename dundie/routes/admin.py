@@ -58,7 +58,7 @@ async def list_all_users_in_db(
 async def create_new_user_in_db(
     *,
     request: Request,
-    user: UserRequest,
+    new_user_data: UserRequest,
     auth_user: User = SuperUser,
     session: Session = ActiveSession,
 ):
@@ -67,19 +67,19 @@ async def create_new_user_in_db(
     verify_admin_password_header(request, auth_user)
 
     # Checks if there is already a user with that username
-    stmt = select(User).where(User.username == user.username)
+    stmt = select(User).where(User.username == new_user_data.username)
     if (
         session.exec(stmt).first()
-        or user.username in settings.PRIVATE_USERNAMES
+        or new_user_data.username in settings.PRIVATE_USERNAMES
     ):
         raise HTTPException(409, 'Username alredy in use')
 
     # Checks if there is already a user with that email
-    stmt = select(User).where(User.email == user.email)
+    stmt = select(User).where(User.email == new_user_data.email)
     if session.exec(stmt).first():
         raise HTTPException(409, 'Email alredy in use')
 
-    db_user = create_user_and_balance(user_data=user, session=session)
+    db_user = create_user_and_balance(user_data=new_user_data, session=session)
 
     return db_user
 
@@ -95,10 +95,14 @@ async def change_user_visibility_by_username(
     session: Session = ActiveSession,
 ):
     """Changes the visibility of a user by username"""
-    is_valid = verify_password(data.password, current_user.password)
 
-    if not is_valid:
-        raise HTTPException(401, 'Invalid password')
+    # check the admin user password
+    is_admin_password_valid = verify_password(
+        data.password, current_user.password
+    )
+
+    if not is_admin_password_valid:
+        raise HTTPException(401, 'Invalid admin password')
 
     stmt = select(User).where(User.username == data.username)
     user = session.exec(stmt).first()
@@ -118,11 +122,6 @@ async def change_user_visibility_by_username(
         session.add(user)
         session.commit()
         return {'detail': f'user {data.username} deactivated'}
-
-    # delete the user if it was not disabled
-    session.delete(user)
-    session.commit()
-    return {'detail': f'user {data.username} deleted!'}
 
 
 @router.get(

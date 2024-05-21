@@ -3,7 +3,7 @@ from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import Session, select
 import re
-from dundie.utils.utils import get_utcnow
+from dundie.utils.utils import apply_product_patch, get_utcnow
 from dundie.auth.functions import SuperUser
 from dundie.config import settings
 from dundie.utils.utils import apply_user_patch, verify_admin_password_header
@@ -126,7 +126,7 @@ async def change_user_visibility_by_username(
 
 @router.get(
     '/{username}',
-    summary='Get a user by username',
+    summary='Get a user by username [ADMIN]',
     dependencies=[SuperUser],
     response_model=UserResponse,
 )
@@ -149,7 +149,7 @@ async def get_full_user_data_by_username(
 
 @router.patch(
     '/{username}',
-    summary='Updates a user by username',
+    summary='Updates a user by username [ADMIN]',
 )
 async def update_user_by_username(
     *,
@@ -160,15 +160,19 @@ async def update_user_by_username(
 ):
     """Updates a user by username"""
 
-    if not verify_password(patch_data.admin_password, admin_user.password):
+    # Check if the admin user password is valid
+    is_admin_password_valid = verify_password(
+        patch_data.admin_password, admin_user.password
+    )
+    if not is_admin_password_valid:
         raise HTTPException(401, 'Invalid admin password')
 
+    # Check if the user exists
     stmt = select(User).where(User.username == username)
     user = session.exec(stmt).first()
     if not user:
         raise HTTPException(404, 'User not found')
 
-    # Set the new password if it was provided
     if patch_data.new_password:
         # Checks if the new password is the same as the current password
         if verify_password(patch_data.new_password, user.password):
@@ -185,13 +189,13 @@ async def update_user_by_username(
 
         user.password = patch_data.hashed_password
 
-    # Remove passwords from the patch data and apply it to the user
-    delattr(patch_data, 'new_password')
-    delattr(patch_data, 'admin_password')
-    apply_user_patch(user, patch_data)
+    # ignore passwords from the patch data and apply it to the user
+    apply_user_patch(
+        user, patch_data, ignore=['new_password', 'admin_password']
+    )
 
-    session.add(user)
     try:
+        session.add(user)
         session.commit()
     except Exception as e:
         session.rollback()
@@ -203,6 +207,7 @@ async def update_user_by_username(
 
 @router.get(
     '/shop/orders',
+    summary='List all orders [ADMIN]',
     dependencies=[SuperUser],
 )
 async def get_orders(
@@ -210,17 +215,22 @@ async def get_orders(
     params: Params = Depends(),
 ):
     """Returns all orders"""
-    query = select(Orders).order_by(Orders.status.desc())
+
+    stmt = select(Orders).order_by(Orders.status.desc())
     try:
         # Paginates the user list response
-        return paginate(query=query, params=params, session=session)
+        return paginate(query=stmt, params=params, session=session)
     except Exception as e:
         print(e)
 
     return {'detail': 'failed to return orders'}
 
 
-@router.post('/shop/product', response_model=ProductResponse)
+@router.post(
+    '/shop/product',
+    summary='Creates a new product [ADMIN]',
+    response_model=ProductResponse,
+)
 async def create_product(
     request: Request,
     product: ProductRequest,
@@ -229,6 +239,7 @@ async def create_product(
 ):
     """Creates a new product"""
 
+    # Check if the admin user password is valid
     verify_admin_password_header(request, auth_user)
 
     new_product = Products(
@@ -250,7 +261,11 @@ async def create_product(
     return new_product
 
 
-@router.patch('/shop/product', response_model=ProductResponse)
+@router.patch(
+    '/shop/product',
+    summary='Updates a product [ADMIN]',
+    response_model=ProductResponse,
+)
 async def update_product(
     request: Request,
     patch_data: ProductUpdateRequest,
@@ -258,6 +273,8 @@ async def update_product(
     session: Session = ActiveSession,
 ):
     """Updates a product"""
+
+    # Check if the admin user password is valid
     verify_admin_password_header(request, auth_user)
 
     stmt = select(Products).where(Products.id == patch_data.id)
@@ -265,14 +282,12 @@ async def update_product(
     if not product:
         raise HTTPException(404, 'Product not found')
 
-    for atribute, value in patch_data:
-        if value is not None:
-            setattr(product, atribute, value)
-
+    # apply the patch data to the product
+    apply_product_patch(product, patch_data)
     product.updated_at = get_utcnow()
 
-    session.add(product)
     try:
+        session.add(product)
         session.commit()
         session.refresh(product)
     except Exception as e:
@@ -295,10 +310,8 @@ async def delete_product(
 ):
     """Deletes a product"""
 
-    admin_password = request.headers.get('X-Admin-Password')
-    is_valid = verify_password(admin_password, user.password)
-    if not is_valid:
-        raise HTTPException(401, 'Invalid admin password')
+    # Check if the admin user password is valid
+    verify_admin_password_header(request, user)
 
     stmt = select(Products).where(Products.id == id)
     product = session.exec(stmt).first()

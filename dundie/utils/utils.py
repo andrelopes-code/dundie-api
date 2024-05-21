@@ -1,8 +1,6 @@
 import re
-import time
 import unicodedata
 from datetime import datetime, timezone
-from functools import wraps
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, Request
@@ -13,8 +11,6 @@ from dundie.db import engine
 
 if TYPE_CHECKING:
     from dundie.models import User, Products
-    from dundie.serializers import UserPatchRequest
-    from dundie.serializers.shop import ProductUpdateRequest
 
 
 def apply_user_patch(user: 'User', patch_data: any, ignore: list = []) -> None:

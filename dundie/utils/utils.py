@@ -16,7 +16,9 @@ if TYPE_CHECKING:
     from dundie.serializers import UserPatchRequest
 
 
-def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:
+def apply_user_patch(
+    user: 'User', patch_data: 'UserPatchRequest', ignore: list = []
+) -> None:
     """
     Updates the user object with the provided patch data.
 
@@ -26,7 +28,7 @@ def apply_user_patch(user: 'User', patch_data: 'UserPatchRequest') -> None:
         attributes and their new values.
     """
     for atribute, value in patch_data:
-        if value is not None:
+        if value is not None and value not in ignore:
             setattr(user, atribute, value)
 
 
@@ -184,7 +186,7 @@ def verify_admin_password_header(request: Request, auth_user: "User"):
     request_password = request.headers.get('X-Admin-Password')
     print(request_password, auth_user.password)
     if not request_password:
-        raise HTTPException(400, 'Missing X-Password header')
+        raise HTTPException(400, 'Missing X-Admin-Password header')
     is_valid = verify_password(request_password, auth_user.password)
     if not is_valid:
         raise HTTPException(401, 'Invalid admin password')

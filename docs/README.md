@@ -1,7 +1,7 @@
 # Dundie
 
 Dundie é um projeto de aprendizagem desenvolvido para fins de demonstração e prática. Este projeto contém uma aplicação web construída com Next.js para o frontend e uma API em Python utilizando FastAPI para o backend.
-
+> não inclui unit tests :(
 - [Frontend Next.js](https://github.com/andrelopes-code/dundie-next-app)
 - [Gitpod Repo](https://github.com/andrelopes-code/dundie)
 
